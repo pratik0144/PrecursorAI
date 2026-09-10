@@ -44,3 +44,8 @@ docker-compose.override.yml
 # Data (exclude large files, keep structure)
 data/synthetic_reports/*.json
 data/knowledge/*.pdf
+
+# One-off scripts — not for version control
+backend/scripts/ingest_knowledge.py
+backend/scripts/seed_reports.py
+backend/scripts/generate_embeddings.py

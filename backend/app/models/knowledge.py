@@ -3,14 +3,14 @@ models/knowledge.py — KnowledgeChunk and KnowledgeEmbedding ORM models
 """
 import uuid
 
-from sqlalchemy import Column, String, Text
+from sqlalchemy import Column, String, Text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from pgvector.sqlalchemy import Vector
 
 from app.core.database import Base
 
-EMBEDDING_DIM = 768
+EMBEDDING_DIM = 3072  # gemini-embedding-001 output dimension
 
 
 class KnowledgeChunk(Base):
@@ -29,9 +29,9 @@ class KnowledgeEmbedding(Base):
     __tablename__ = "knowledge_embeddings"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    chunk_id = Column(String(255), nullable=False, index=True)
+    chunk_id = Column(String(255), ForeignKey("knowledge_chunks.chunk_id"), nullable=False, index=True)
     embedding = Column(Vector(EMBEDDING_DIM), nullable=False)
-    model = Column(String(100), nullable=False, default="text-embedding-004")
+    model = Column(String(100), nullable=False, default="gemini-embedding-001")
 
     chunk = relationship("KnowledgeChunk", back_populates="embedding", foreign_keys=[chunk_id],
                          primaryjoin="KnowledgeChunk.chunk_id == KnowledgeEmbedding.chunk_id")

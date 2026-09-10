@@ -10,4 +10,25 @@ Rules:
 The LLM does NOT decide the final risk level.
 Python (risk_engine) computes it deterministically.
 """
-# TODO: implement triage logic
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.ai.risk_engine import needs_human_review
+from app.models.analysis import ReportAnalysis
+from app.models.report import Report
+from app.services.alert_service import create_sif_alert
+
+
+async def route_report(analysis: ReportAnalysis, report: Report, db: AsyncSession):
+    """
+    Determine final status of the report based on analysis,
+    and trigger alerts if necessary.
+    """
+    # 1. Human-in-the-loop checks (low confidence or explicit follow-up needed)
+    if needs_human_review(analysis):
+        report.status = "REVIEW"
+    else:
+        report.status = "ANALYZED"
+
+    # 2. Alert creation for severe risk levels
+    if analysis.risk_level in ("HIGH", "SIF"):
+        await create_sif_alert(report, analysis, db)

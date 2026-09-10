@@ -17,17 +17,329 @@ NOT Gemini's responsibility:
 
 Output schema: GeminiAnalysisOutput (schemas/analysis.py)
 """
+import json
+import logging
 from typing import List
 
-# TODO: implement Gemini prompt construction and structured JSON output parsing
+from app.ai.gemini import get_client
+from app.schemas.analysis import GeminiAnalysisOutput
+
+logger = logging.getLogger(__name__)
+
+# ── IOGP Life-Saving Rules summary (always injected — short, fits every prompt) ──
+
+IOGP_RULES_SUMMARY = """
+IOGP LIFE-SAVING RULES (9 rules — always check relevance):
+1. BYPASSING SAFETY CONTROLS: Obtain authorisation before overriding or disabling safety controls.
+2. CONFINED SPACE: Obtain authorisation before entering a confined space.
+3. DRIVING: Do not use a phone or exceed speed limits while driving. Wear a seatbelt.
+4. ENERGY ISOLATION: Verify isolation and zero energy before work begins.
+5. HOT WORK: Obtain authorisation before igniting or working with sources of ignition in hazardous areas.
+6. LINE OF FIRE: Keep yourself and others out of the line of fire.
+7. SAFE MECHANICAL LIFTING: Conduct a risk assessment and never walk under a suspended load.
+8. WORK AT HEIGHT: Obtain authorisation before working at height.
+9. H2S: Never work in an area that may contain H2S without breathing equipment.
+""".strip()
+
+# ── SIF criteria (explicit rules injected every prompt) ─────────────────────
+
+SIF_CRITERIA = """
+SIF PRECURSOR CRITERIA — A report is SIF-potential if ALL THREE apply:
+  1. ENERGY SOURCE present: gravitational (height/load), mechanical (moving parts), 
+     chemical (flammables, toxics, H2S), electrical, pressure, thermal, or kinetic.
+  2. PERSON IN PROXIMITY: a person was or could be in the path of harm.
+  3. BARRIER FAILED or MISSING: a safety control that should have prevented exposure 
+     was absent, bypassed, degraded, or failed.
+
+If any one of the three is absent or uncertain, classify as Non-SIF-potential 
+but set requires_followup=true if you cannot confirm.
+""".strip()
+
+# ── Few-shot examples ────────────────────────────────────────────────────────
+
+FEW_SHOT_EXAMPLES = """
+=== FEW-SHOT EXAMPLES ===
+
+--- EXAMPLE 1 (SIF-potential: worker beneath suspended load, barrier failed) ---
+Report: "During pipe rack installation at Duliajan rig #4, a 400 kg pipe joint slipped 
+from the crane hook while a rigger was directly below completing the tag-line connection. 
+The secondary sling was missing. The pipe fell 6 metres but fortunately missed the worker."
+Output:
+{
+  "sif_potential": true,
+  "confidence_score": 0.97,
+  "hazard": "Falling object / suspended load",
+  "energy_source": "Gravitational — 400 kg pipe joint at 6 m elevation",
+  "activity": "Pipe rack installation using crane",
+  "asset": "Rig #4 crane",
+  "location": "Duliajan",
+  "barrier": "Secondary sling / tag-line protocol",
+  "barrier_status": "FAILED",
+  "severity": "CRITICAL",
+  "life_saving_rules": ["SAFE MECHANICAL LIFTING"],
+  "rationale": "All three SIF criteria met: gravitational energy (400 kg at 6 m), person directly below load, secondary sling completely absent. Near-fatality.",
+  "requires_followup": false,
+  "followup_question": null
+}
+
+--- EXAMPLE 2 (SIF-potential: H2S exposure, PPE absent) ---
+Report: "Operator entered the separator area at Nazira without checking H2S monitor 
+reading. Monitor was found to be reading 45 ppm. Operator had no breathing apparatus."
+Output:
+{
+  "sif_potential": true,
+  "confidence_score": 0.95,
+  "hazard": "Toxic gas exposure — H2S",
+  "energy_source": "Chemical — Hydrogen sulphide at 45 ppm (immediately dangerous above 50 ppm)",
+  "activity": "Routine inspection / area access",
+  "asset": "Separator unit",
+  "location": "Nazira",
+  "barrier": "H2S monitor check + breathing apparatus",
+  "barrier_status": "FAILED",
+  "severity": "CRITICAL",
+  "life_saving_rules": ["H2S"],
+  "rationale": "H2S at 45 ppm with no SCBA and no pre-entry monitor check. Lethal concentrations possible within seconds. All SIF criteria met.",
+  "requires_followup": false,
+  "followup_question": null
+}
+
+--- EXAMPLE 3 (SIF-potential: energy isolation not verified) ---
+Report: "Maintenance technician began work on the HV transformer at Jorhat substation 
+before the LOTO permit was signed. The equipment was still energised at 11 kV."
+Output:
+{
+  "sif_potential": true,
+  "confidence_score": 0.98,
+  "hazard": "Electrical shock / electrocution",
+  "energy_source": "Electrical — 11 kV high voltage",
+  "activity": "Electrical maintenance on HV transformer",
+  "asset": "HV transformer",
+  "location": "Jorhat substation",
+  "barrier": "LOTO (Lockout-Tagout) permit",
+  "barrier_status": "FAILED",
+  "severity": "CRITICAL",
+  "life_saving_rules": ["ENERGY ISOLATION", "BYPASSING SAFETY CONTROLS"],
+  "rationale": "Worker in direct contact with live 11 kV equipment. LOTO procedure completely bypassed. Electrocution was imminent.",
+  "requires_followup": false,
+  "followup_question": null
+}
+
+--- EXAMPLE 4 (Non-SIF: minor housekeeping, no energy source) ---
+Report: "Oil spill of approximately 2 litres found near the mud pit area. 
+Area was cordoned off and cleaned within 30 minutes. No personnel were in the area."
+Output:
+{
+  "sif_potential": false,
+  "confidence_score": 0.90,
+  "hazard": "Slip / environmental contamination",
+  "energy_source": "None significant — small volume spill, no ignition source identified",
+  "activity": "Housekeeping / spill response",
+  "asset": "Mud pit area",
+  "location": null,
+  "barrier": "Area cordoning",
+  "barrier_status": "INTACT",
+  "severity": "LOW",
+  "life_saving_rules": [],
+  "rationale": "No person was in proximity, spill was minor and quickly contained. No energy source capable of causing SIF identified. Routine housekeeping issue.",
+  "requires_followup": false,
+  "followup_question": null
+}
+
+--- EXAMPLE 5 (Non-SIF: driver seatbelt, barrier intact) ---
+Report: "Driver observed not wearing seatbelt while driving OIL vehicle on the 
+Duliajan field road. He was stopped and counselled. Seatbelt was worn for remainder of journey."
+Output:
+{
+  "sif_potential": false,
+  "confidence_score": 0.82,
+  "hazard": "Road traffic / vehicle accident",
+  "energy_source": "Kinetic — moving vehicle",
+  "activity": "Vehicle driving",
+  "asset": "OIL field vehicle",
+  "location": "Duliajan field road",
+  "barrier": "Seatbelt",
+  "barrier_status": "FAILED",
+  "severity": "MEDIUM",
+  "life_saving_rules": ["DRIVING"],
+  "rationale": "Barrier (seatbelt) was missing but corrective action was immediate. No near-miss event occurred. Risk is real but does not meet SIF threshold without an actual incident trigger.",
+  "requires_followup": false,
+  "followup_question": null
+}
+
+--- EXAMPLE 6 (Non-SIF: administrative / documentation) ---
+Report: "Permit to work was issued 20 minutes after work had already started 
+at well #12. Supervisor signed off retroactively. No injuries."
+Output:
+{
+  "sif_potential": false,
+  "confidence_score": 0.78,
+  "hazard": "Procedural / permit to work violation",
+  "energy_source": "Unknown — work type not specified",
+  "activity": "Unspecified well work",
+  "asset": "Well #12",
+  "location": null,
+  "barrier": "Permit to Work system",
+  "barrier_status": "DEGRADED",
+  "severity": "MEDIUM",
+  "life_saving_rules": ["BYPASSING SAFETY CONTROLS"],
+  "rationale": "PTW issued retroactively is a serious procedural failure. However, the specific work type and energy source are unspecified — cannot confirm SIF potential without knowing the hazard.",
+  "requires_followup": true,
+  "followup_question": "What specific work was being performed at Well #12 and what energy sources were present?"
+}
+
+--- EXAMPLE 7 (Ambiguous — requires followup) ---
+Report: "Worker reported feeling dizzy near the gas compression station. 
+He rested for 10 minutes and felt better. No formal check was done."
+Output:
+{
+  "sif_potential": true,
+  "confidence_score": 0.61,
+  "hazard": "Possible gas / toxic exposure",
+  "energy_source": "Chemical — possible gas leak near compression station",
+  "activity": "Work near gas compression station",
+  "asset": "Gas compression station",
+  "location": null,
+  "barrier": "Gas detection / area monitoring",
+  "barrier_status": "UNKNOWN",
+  "severity": "HIGH",
+  "life_saving_rules": ["H2S"],
+  "rationale": "Dizziness near a gas compression station is a red flag for toxic gas or oxygen-deficient atmosphere exposure. Barrier status is unknown — no monitor check was performed. Requires immediate investigation.",
+  "requires_followup": true,
+  "followup_question": "Was there any gas leak or H2S alarm at the compression station at the time? What was the worker's exact task and location?"
+}
+
+--- EXAMPLE 8 (Ambiguous — work at height, incomplete info) ---
+Report: "Scaffolding was found with missing planks on level 3 of the 
+Jorhat processing unit. Reported by a passerby."
+Output:
+{
+  "sif_potential": true,
+  "confidence_score": 0.72,
+  "hazard": "Fall from height / falling object",
+  "energy_source": "Gravitational — level 3 height (estimated 8-10 m)",
+  "activity": "Scaffolding use / access at height",
+  "asset": "Scaffolding at Jorhat processing unit",
+  "location": "Jorhat processing unit",
+  "barrier": "Scaffold planking / working platform",
+  "barrier_status": "FAILED",
+  "severity": "HIGH",
+  "life_saving_rules": ["WORK AT HEIGHT", "SAFE MECHANICAL LIFTING"],
+  "rationale": "Missing scaffold planks at approximately 10 m height is a direct fall hazard. If any worker accesses level 3, SIF is likely. Barrier is clearly failed.",
+  "requires_followup": true,
+  "followup_question": "Is anyone currently working on level 3 of this scaffold? Has work been stopped and the area barricaded?"
+}
+""".strip()
+
+# ── System prompt template ───────────────────────────────────────────────────
+
+SYSTEM_PROMPT_TEMPLATE = """You are a Safety Intelligence Assistant for Oil India Limited (OIL), 
+an upstream oil and gas company operating in Assam, India.
+
+Your job is to analyse a single HSSE (Health, Safety, Security and Environment) observation 
+report — which may be an Unsafe Act, Unsafe Condition, or Near-Miss — and produce a 
+structured JSON classification of its SIF (Serious Injury and Fatality) potential.
+
+{sif_criteria}
+
+{iogp_rules}
+
+=== RETRIEVED SAFETY KNOWLEDGE (use this to ground your classification) ===
+{retrieved_chunks}
+=== END RETRIEVED KNOWLEDGE ===
+
+{few_shot_examples}
+
+=== OUTPUT FORMAT ===
+Respond ONLY with a single valid JSON object. No markdown, no code fences, no explanation outside the JSON.
+Use exactly these fields:
+{{
+  "sif_potential": <boolean>,
+  "confidence_score": <float 0.0-1.0>,
+  "hazard": <string — specific hazard type>,
+  "energy_source": <string — energy source and magnitude if known>,
+  "activity": <string — what was being done>,
+  "asset": <string or null — equipment/asset involved>,
+  "location": <string or null — site/area if mentioned>,
+  "barrier": <string — safety control that should prevent harm>,
+  "barrier_status": <"INTACT" | "DEGRADED" | "FAILED" | "UNKNOWN">,
+  "severity": <"LOW" | "MEDIUM" | "HIGH" | "CRITICAL">,
+  "life_saving_rules": <list of applicable rule names from the 9 IOGP rules, or []>,
+  "rationale": <string — 1-3 sentence explanation citing specific report evidence>,
+  "requires_followup": <boolean>,
+  "followup_question": <string or null>
+}}
+""".strip()
+
+
+def _build_prompt(report_text: str, knowledge_chunks: List[dict]) -> str:
+    """Assemble the full prompt with RAG context injected."""
+    if knowledge_chunks:
+        chunks_text = "\n\n".join(
+            f"[{i+1}] SOURCE: {c['source']} | {c['title']}\n{c['chunk_text']}"
+            for i, c in enumerate(knowledge_chunks)
+        )
+    else:
+        chunks_text = "No specific knowledge chunks retrieved. Rely on the IOGP rules and SIF criteria above."
+
+    system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+        sif_criteria=SIF_CRITERIA,
+        iogp_rules=IOGP_RULES_SUMMARY,
+        retrieved_chunks=chunks_text,
+        few_shot_examples=FEW_SHOT_EXAMPLES,
+    )
+
+    return f"{system_prompt}\n\n=== REPORT TO CLASSIFY ===\n{report_text}\n=== END REPORT ==="
+
 
 async def classify_report(
     report_text: str,
     knowledge_chunks: List[dict],
-) -> dict:
+) -> GeminiAnalysisOutput:
     """
-    Send report + RAG context to Gemini and return structured analysis.
-    Returns a dict matching GeminiAnalysisOutput schema.
+    Send report + RAG context to Gemini and return validated GeminiAnalysisOutput.
+
+    Retries once on malformed / invalid JSON.
+    Raises ValueError if both attempts fail.
     """
-    # TODO: build prompt, call Gemini with response_mime_type="application/json"
-    raise NotImplementedError
+    model = get_client()
+    prompt = _build_prompt(report_text, knowledge_chunks)
+
+    generation_config = {
+        "response_mime_type": "application/json",
+        "temperature": 0.1,      # Low temperature for consistent, reliable JSON
+        "max_output_tokens": 1024,
+    }
+
+    for attempt in range(2):
+        try:
+            response = model.generate_content(
+                prompt,
+                generation_config=generation_config,
+            )
+            raw = response.text.strip()
+
+            # Strip accidental code fences if present
+            if raw.startswith("```"):
+                raw = raw.split("```")[1]
+                if raw.startswith("json"):
+                    raw = raw[4:]
+                raw = raw.strip()
+
+            data = json.loads(raw)
+            return GeminiAnalysisOutput(**data)
+
+        except (json.JSONDecodeError, Exception) as e:
+            if attempt == 0:
+                logger.warning(
+                    "Gemini returned invalid JSON on attempt 1, retrying. Error: %s", e
+                )
+                continue
+            logger.error(
+                "Gemini classifier failed after 2 attempts for report (first 100 chars): %s. Error: %s",
+                report_text[:100],
+                e,
+            )
+            raise ValueError(
+                f"Gemini did not return valid structured JSON after 2 attempts: {e}"
+            ) from e
+

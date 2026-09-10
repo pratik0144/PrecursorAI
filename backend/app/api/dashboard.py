@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.schemas.dashboard import DashboardSummary
+from app.services.dashboard_service import get_summary
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
@@ -17,5 +18,4 @@ async def get_dashboard_summary(db: AsyncSession = Depends(get_db)):
     Frontend polls this endpoint every 5–10 seconds.
     No WebSocket — pure REST polling.
     """
-    # TODO: call dashboard_service.get_summary(db)
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented yet")
+    return await get_summary(db)

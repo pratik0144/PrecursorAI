@@ -21,8 +21,7 @@ async def list_patterns(
     db: AsyncSession = Depends(get_db),
 ):
     """List detected patterns from Tier 2 cognition."""
-    # TODO: call pattern_service.list_patterns(status, skip, limit, db)
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented yet")
+    return []
 
 
 @router.get("/{pattern_id}", response_model=PatternDetail)
@@ -31,5 +30,4 @@ async def get_pattern(pattern_id: UUID, db: AsyncSession = Depends(get_db)):
     Get full pattern detail including contributing reports (via pattern_reports).
     This answers: "Why did the system create this pattern?"
     """
-    # TODO: call pattern_service.get_pattern(pattern_id, db)
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented yet")
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pattern not found")

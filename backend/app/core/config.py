@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:zuber%402006@localhost:5432/precursorai"
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/precursorai"
 
     # Gemini
     GEMINI_API_KEY: str = ""

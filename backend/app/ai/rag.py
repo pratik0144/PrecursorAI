@@ -11,11 +11,10 @@ PostgreSQL + pgvector is the ONLY vector store. No separate vector database.
 """
 from typing import List
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-
-# TODO: import KnowledgeChunk model and pgvector query
 
 
 async def retrieve_relevant_chunks(
@@ -26,7 +25,37 @@ async def retrieve_relevant_chunks(
     """
     Query knowledge_embeddings by cosine similarity and return top-K chunks.
     Uses pgvector's <=> (cosine distance) operator.
+    Returns list of dicts: {chunk_id, title, chunk_text, source, similarity}
     """
     top_k = top_k or settings.RAG_TOP_K
-    # TODO: implement pgvector similarity query
-    raise NotImplementedError
+
+    # Cast the Python list to a pgvector literal
+    embedding_str = "[" + ",".join(str(x) for x in report_embedding) + "]"
+
+    sql = text("""
+        SELECT
+            kc.chunk_id,
+            kc.title,
+            kc.chunk_text,
+            kc.source,
+            1 - (ke.embedding <=> CAST(:embedding AS vector)) AS similarity
+        FROM knowledge_embeddings ke
+        JOIN knowledge_chunks kc ON kc.chunk_id = ke.chunk_id
+        ORDER BY ke.embedding <=> CAST(:embedding AS vector)
+        LIMIT :top_k
+    """)
+
+    result = await db.execute(sql, {"embedding": embedding_str, "top_k": top_k})
+    rows = result.fetchall()
+
+    return [
+        {
+            "chunk_id": row.chunk_id,
+            "title": row.title,
+            "chunk_text": row.chunk_text,
+            "source": row.source,
+            "similarity": round(float(row.similarity), 4),
+        }
+        for row in rows
+    ]
+

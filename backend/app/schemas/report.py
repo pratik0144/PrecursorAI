@@ -28,6 +28,27 @@ class AnalysisSummary(BaseModel):
     iogp_rule: Optional[str] = None
 
 
+class ReportAnalysisDetail(BaseModel):
+    id: Optional[uuid.UUID] = None
+    sif_potential: Optional[bool] = None
+    confidence: Optional[float] = None
+    risk_score: Optional[int] = None
+    risk_level: Optional[str] = None
+    activity: Optional[str] = None
+    hazard: Optional[str] = None
+    energy_source: Optional[str] = None
+    barrier: Optional[str] = None
+    barrier_status: Optional[str] = None
+    iogp_rule: Optional[str] = None
+    severity: Optional[str] = None
+    rationale: Optional[str] = None
+    requires_followup: Optional[bool] = None
+    followup_question: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+
+
 # ── Responses ────────────────────────────────────────────────────────────────
 
 class ReportSubmitResponse(BaseModel):
@@ -49,3 +70,5 @@ class ReportListItem(BaseModel):
 
 class ReportDetail(ReportListItem):
     report_text: str
+    analysis: Optional[ReportAnalysisDetail] = None
+

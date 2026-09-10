@@ -9,6 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.schemas.report import ReportCreate, ReportDetail, ReportListItem, ReportSubmitResponse
+from app.services.report_service import submit_and_analyze
+from app.services.report_service import list_reports as list_reports_service
+from app.services.report_service import get_report as get_report_service
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
@@ -22,8 +25,7 @@ async def submit_report(payload: ReportCreate, db: AsyncSession = Depends(get_db
     RAG + Gemini + the deterministic risk engine.
     Returns a summary of the analysis result.
     """
-    # TODO: call report_service.submit_and_analyze(payload, db)
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented yet")
+    return await submit_and_analyze(payload, db)
 
 
 @router.get("", response_model=List[ReportListItem])
@@ -33,12 +35,13 @@ async def list_reports(
     db: AsyncSession = Depends(get_db),
 ):
     """List all reports, newest first."""
-    # TODO: call report_service.list_reports(skip, limit, db)
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented yet")
+    return await list_reports_service(skip, limit, db)
 
 
 @router.get("/{report_id}", response_model=ReportDetail)
 async def get_report(report_id: UUID, db: AsyncSession = Depends(get_db)):
     """Get full details of a single report including its analysis."""
-    # TODO: call report_service.get_report(report_id, db)
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented yet")
+    report = await get_report_service(report_id, db)
+    if not report:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Report not found")
+    return report

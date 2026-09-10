@@ -9,15 +9,21 @@ from typing import List
 
 import numpy as np
 
-# TODO: import and configure genai from ai/gemini.py
-
-EMBEDDING_DIM = 768
+from app.ai.gemini import EMBEDDING_MODEL, get_genai
 
 
 async def embed_text(text: str) -> List[float]:
-    """Generate an embedding vector for a single text string."""
-    # TODO: call genai.embed_content(model="text-embedding-004", content=text)
-    raise NotImplementedError
+    """
+    Generate a 3072-dim embedding vector for a single text string.
+    Uses Gemini gemini-embedding-001 via the google-generativeai SDK.
+    """
+    _genai = get_genai()
+    result = _genai.embed_content(
+        model=EMBEDDING_MODEL,
+        content=text,
+        task_type="retrieval_document",
+    )
+    return result["embedding"]
 
 
 def cosine_similarity(a: List[float], b: List[float]) -> float:
@@ -28,3 +34,4 @@ def cosine_similarity(a: List[float], b: List[float]) -> float:
     if norm == 0:
         return 0.0
     return float(np.dot(va, vb) / norm)
+
