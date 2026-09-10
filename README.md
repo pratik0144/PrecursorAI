@@ -258,19 +258,6 @@ _(no `websocket/` or `redis.py` — cut along with those features)_
 
 ---
 
-## 9. Team (3–4 people) & Ownership
-
-| Role                                        | Owns                                                                                                                        |
-| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| **A — AI/Backend Lead**                     | Tier 1 pipeline: FastAPI setup, preprocessing, embeddings, RAG, Gemini prompts, risk engine, IOGP mapping                   |
-| **B — Data/Backend Lead**                   | Schema, pgvector, synthetic report generator (with injected patterns), Tier 2 stats + similarity grouping + cognition sweep |
-| **C — Frontend Lead**                       | React app: Submission, Dashboard, Alerts, Pattern Intelligence views; API integration; polling                              |
-| **D — Integration/QA/Pitch** _(4th person)_ | End-to-end testing, precision/recall eval on labeled synthetic data, deployment, demo script, deck, fallback recording      |
-
-If 3 people: A or B absorbs D's scope in the final stretch — planned for explicitly, not discovered under pressure.
-
----
-
 ## 10. Day-by-Day Plan (2–3 days)
 
 **Day 1 — Foundations (parallel):**
