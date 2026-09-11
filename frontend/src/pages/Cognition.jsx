@@ -14,33 +14,28 @@ import {
   RefreshCw, ExternalLink, AlertTriangle,
   Layers, ShieldAlert, Filter, Activity, Search
 } from 'lucide-react'
+import controlRoomHero from '../assets/oil_rig_hero.png'
+import '../ops/styles/intelligence.css'
 
-const PRIORITY_STYLES = {
-  CRITICAL: 'bg-red-500/15 text-red-400 border-red-500/30',
-  HIGH:     'bg-orange-500/15 text-orange-400 border-orange-500/30',
-  MEDIUM:   'bg-yellow-500/15 text-yellow-400 border-yellow-500/30',
-  LOW:      'bg-gray-500/15 text-gray-400 border-gray-500/30',
+const PRIORITY_STYLE = {
+  CRITICAL: { background: 'rgba(239,68,68,0.12)', color: '#F87171', border: '1px solid rgba(239,68,68,0.28)' },
+  HIGH:     { background: 'rgba(249,115,22,0.12)', color: '#FB923C', border: '1px solid rgba(249,115,22,0.28)' },
+  MEDIUM:   { background: 'rgba(245,158,11,0.12)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.28)' },
+  LOW:      { background: 'rgba(107,114,128,0.12)', color: '#9CA3AF', border: '1px solid rgba(107,114,128,0.25)' },
+}
+
+const TYPE_STYLE = {
+  RECURRING:   { background: 'rgba(239,68,68,0.10)', color: '#F87171', border: '1px solid rgba(239,68,68,0.22)' },
+  EMERGING:    { background: 'rgba(249,115,22,0.10)', color: '#FB923C', border: '1px solid rgba(249,115,22,0.22)' },
+  COMPOUNDING: { background: 'rgba(245,158,11,0.10)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.22)' },
+  SYSTEMIC:    { background: 'rgba(139,92,246,0.10)', color: '#C4B5FD', border: '1px solid rgba(139,92,246,0.22)' },
 }
 
 const PATTERN_TYPE_ICON = {
-  RECURRING:    Repeat2,
-  EMERGING:     TrendingUp,
-  COMPOUNDING:  GitBranch,
-  SYSTEMIC:     Network,
-}
-
-const PATTERN_TYPE_COLOR = {
-  RECURRING:    'text-red-400',
-  EMERGING:     'text-orange-400',
-  COMPOUNDING:  'text-yellow-400',
-  SYSTEMIC:     'text-purple-400',
-}
-
-const PATTERN_TYPE_BG = {
-  RECURRING:    'bg-red-500/10 border-red-500/20 text-red-400',
-  EMERGING:     'bg-orange-500/10 border-orange-500/20 text-orange-400',
-  COMPOUNDING:  'bg-yellow-500/10 border-yellow-500/20 text-yellow-400',
-  SYSTEMIC:     'bg-purple-500/10 border-purple-500/20 text-purple-400',
+  RECURRING:   Repeat2,
+  EMERGING:    TrendingUp,
+  COMPOUNDING: GitBranch,
+  SYSTEMIC:    Network,
 }
 
 export default function Cognition() {
@@ -68,9 +63,7 @@ export default function Cognition() {
     }
   }
 
-  useEffect(() => {
-    fetchPatterns()
-  }, [])
+  useEffect(() => { fetchPatterns() }, [])
 
   const handleSelectPattern = async (id) => {
     setDetailLoading(true)
@@ -103,383 +96,322 @@ export default function Cognition() {
     if (filterPriority !== 'ALL' && p.priority !== filterPriority) return false
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
-      const titleMatch = p.title?.toLowerCase().includes(q)
-      const hazardMatch = p.hazard?.toLowerCase().includes(q)
-      const assetMatch = p.asset_id?.toLowerCase().includes(q) || p.location?.toLowerCase().includes(q)
-      return titleMatch || hazardMatch || assetMatch
+      return p.title?.toLowerCase().includes(q)
+          || p.hazard?.toLowerCase().includes(q)
+          || p.asset_id?.toLowerCase().includes(q)
+          || p.location?.toLowerCase().includes(q)
     }
     return true
   })
 
-  // Summary counts
-  const totalCount = patterns.length
+  const totalCount     = patterns.length
   const recurringCount = patterns.filter(p => p.pattern_type === 'RECURRING').length
-  const emergingCount = patterns.filter(p => p.pattern_type === 'EMERGING').length
-  const criticalCount = patterns.filter(p => p.priority === 'CRITICAL').length
+  const emergingCount  = patterns.filter(p => p.pattern_type === 'EMERGING').length
+  const criticalCount  = patterns.filter(p => p.priority === 'CRITICAL').length
 
-  if (loading) {
-    return (
-      <div className="p-8 flex items-center justify-center min-h-[60vh]">
-        <div className="animate-pulse flex flex-col items-center">
-          <BrainCircuit className="w-10 h-10 text-purple-500 mb-4 animate-spin" />
-          <p className="text-gray-400 font-medium">Loading pattern intelligence engine...</p>
-        </div>
-      </div>
-    )
-  }
+  if (loading) return (
+    <div className="loading-screen">
+      <BrainCircuit size={28} className="spin" style={{ color: '#A78BFA' }} />
+      <span>LOADING PATTERN INTELLIGENCE ENGINE...</span>
+    </div>
+  )
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="bg-purple-600/20 border border-purple-500/30 p-2.5 rounded-xl">
-              <BrainCircuit className="w-7 h-7 text-purple-400" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">Pattern Intelligence</h1>
-              <p className="text-gray-400 text-sm mt-0.5">
-                Recurring Precursors & Multi-Report Safety Pattern Detection
-              </p>
-            </div>
+    <div className="cognition-page-wrap">
+      {/* Hero */}
+      <div className="page-hero">
+        <img src={controlRoomHero} alt="" className="page-hero-img" />
+        <div className="page-hero-overlay" />
+        <div className="page-hero-content">
+          <div className="page-hero-label">Tier 2 Analysis</div>
+          <div className="page-hero-title" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div className="cognition-icon-wrap"><BrainCircuit size={22} /></div>
+            Pattern Intelligence
+          </div>
+          <div className="page-hero-subtitle">
+            Recurring Precursors &amp; Multi-Report Safety Pattern Detection
           </div>
         </div>
-
-        <button
-          id="run-pattern-analysis-btn"
-          onClick={handleSweep}
-          disabled={sweepRunning}
-          className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all border ${
-            sweepRunning
-              ? 'bg-purple-500/10 border-purple-500/20 text-purple-400 cursor-not-allowed'
-              : 'bg-purple-600 hover:bg-purple-500 border-purple-500 text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40'
-          }`}
-        >
-          <RefreshCw className={`w-4 h-4 ${sweepRunning ? 'animate-spin' : ''}`} />
-          {sweepRunning ? 'Running Pattern Analysis...' : 'Run Pattern Analysis'}
-        </button>
-      </div>
-
-      {/* Sweep result toast */}
-      {sweepResult && (
-        <div className={`mb-6 px-5 py-3.5 rounded-xl text-sm border flex items-center gap-3 shadow-md ${
-          sweepResult.patterns_saved === -1
-            ? 'bg-red-500/10 border-red-500/20 text-red-400'
-            : sweepResult.patterns_saved === 0
-              ? 'bg-gray-800/80 border-gray-700 text-gray-300'
-              : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-        }`}>
-          <Activity className="w-5 h-5 shrink-0" />
-          <span>{sweepResult.message}</span>
-        </div>
-      )}
-
-      {/* Stats Summary Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        <div className="bg-[#111827] border border-gray-800 rounded-xl p-4 flex items-center gap-3">
-          <div className="p-2.5 rounded-lg bg-purple-500/15 text-purple-400">
-            <Layers className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-gray-400">Active Patterns</p>
-            <p className="text-2xl font-bold text-white">{totalCount}</p>
-          </div>
-        </div>
-
-        <div className="bg-[#111827] border border-gray-800 rounded-xl p-4 flex items-center gap-3">
-          <div className="p-2.5 rounded-lg bg-red-500/15 text-red-400">
-            <Repeat2 className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-gray-400">Recurring Precursors</p>
-            <p className="text-2xl font-bold text-white">{recurringCount}</p>
-          </div>
-        </div>
-
-        <div className="bg-[#111827] border border-gray-800 rounded-xl p-4 flex items-center gap-3">
-          <div className="p-2.5 rounded-lg bg-orange-500/15 text-orange-400">
-            <TrendingUp className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-gray-400">Emerging Risks</p>
-            <p className="text-2xl font-bold text-white">{emergingCount}</p>
-          </div>
-        </div>
-
-        <div className="bg-[#111827] border border-gray-800 rounded-xl p-4 flex items-center gap-3">
-          <div className="p-2.5 rounded-lg bg-red-500/15 text-red-400 border border-red-500/20">
-            <ShieldAlert className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-gray-400">Critical Priority</p>
-            <p className="text-2xl font-bold text-white">{criticalCount}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Filter controls */}
-      <div className="bg-[#111827] border border-gray-800 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-          <span className="text-xs font-medium text-gray-400 mr-1 flex items-center gap-1">
-            <Filter className="w-3.5 h-3.5" /> Type:
-          </span>
-          {['ALL', 'RECURRING', 'EMERGING', 'COMPOUNDING', 'SYSTEMIC'].map(type => (
-            <button
-              key={type}
-              onClick={() => setFilterType(type)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                filterType === type
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-800/60 text-gray-400 hover:text-gray-200 hover:bg-gray-800'
-              }`}
-            >
-              {type}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="relative flex-1 md:w-64">
-            <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search patterns or assets..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-900 border border-gray-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
-            />
-          </div>
-
-          <select
-            value={filterPriority}
-            onChange={e => setFilterPriority(e.target.value)}
-            className="bg-gray-900 border border-gray-800 rounded-lg px-3 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-purple-500"
+        <div className="page-hero-action">
+          <button
+            id="run-pattern-analysis-btn"
+            className="btn-primary"
+            onClick={handleSweep}
+            disabled={sweepRunning}
+            style={sweepRunning ? { backgroundColor: 'rgba(245,158,11,0.2)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.3)' } : {}}
           >
-            <option value="ALL">All Priorities</option>
-            <option value="CRITICAL">Critical</option>
-            <option value="HIGH">High</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="LOW">Low</option>
-          </select>
+            <RefreshCw size={14} className={sweepRunning ? 'spin' : ''} />
+            {sweepRunning ? 'Running...' : 'Run Pattern Analysis'}
+          </button>
         </div>
       </div>
 
-      {/* Main Grid: Pattern List (Left) + Detail Panel (Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Pattern Cards */}
-        <div className="lg:col-span-5 space-y-3">
-          {filteredPatterns.length === 0 ? (
-            <div className="bg-[#111827] border border-gray-800 rounded-xl p-8 text-center">
-              <TrendingUp className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-400 font-semibold">No patterns found</p>
-              <p className="text-xs text-gray-500 mt-1">
-                {patterns.length === 0
-                  ? 'Submit multiple reports on the same asset and run Pattern Analysis.'
-                  : 'Try clearing your filters or search query.'}
-              </p>
+      <div className="cognition-content">
+        {/* Sweep result */}
+        {sweepResult && (
+          <div className={`sweep-banner ${sweepResult.patterns_saved === -1 ? 'error' : sweepResult.patterns_saved === 0 ? 'neutral' : 'success'}`}>
+            <Activity size={16} style={{ flexShrink: 0 }} />
+            <span>{sweepResult.message}</span>
+          </div>
+        )}
+
+        {/* Stats row */}
+        <div className="cognition-stats-row">
+          <div className="cognition-stat-card">
+            <div className="cognition-stat-icon purple"><Layers size={17} /></div>
+            <div>
+              <div className="cognition-stat-label">Active Patterns</div>
+              <div className="cognition-stat-value">{totalCount}</div>
             </div>
-          ) : (
-            filteredPatterns.map(pattern => {
-              const TypeIcon = PATTERN_TYPE_ICON[pattern.pattern_type] || Zap
-              const typeBg = PATTERN_TYPE_BG[pattern.pattern_type] || 'bg-gray-800 text-gray-400 border-gray-700'
-              const priorityStyle = PRIORITY_STYLES[pattern.priority] || PRIORITY_STYLES.LOW
-              const isSelected = selectedPattern?.id === pattern.id
-
-              return (
-                <div
-                  key={pattern.id}
-                  onClick={() => handleSelectPattern(pattern.id)}
-                  className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                    isSelected
-                      ? 'bg-[#161f32] border-purple-500/80 shadow-lg shadow-purple-950/40 ring-1 ring-purple-500/30'
-                      : 'bg-[#111827] border-gray-800 hover:border-gray-700 hover:bg-[#131b2c]'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3 mb-2">
-                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border flex items-center gap-1 ${typeBg}`}>
-                      <TypeIcon className="w-3 h-3" />
-                      {pattern.pattern_type}
-                    </span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${priorityStyle}`}>
-                      {pattern.priority}
-                    </span>
-                  </div>
-
-                  <h3 className="text-white font-semibold text-sm leading-snug mb-2">
-                    {pattern.title}
-                  </h3>
-
-                  <div className="flex items-center justify-between text-xs text-gray-400 mt-3 pt-2 border-t border-gray-800/80">
-                    <span className="font-medium text-gray-300 truncate pr-2">
-                      {pattern.asset_id || pattern.location || 'General Asset'}
-                    </span>
-                    <span className="text-gray-500 shrink-0">
-                      <strong className="text-purple-400">{pattern.report_count}</strong> reports
-                    </span>
-                  </div>
-                </div>
-              )
-            })
-          )}
+          </div>
+          <div className="cognition-stat-card">
+            <div className="cognition-stat-icon red"><Repeat2 size={17} /></div>
+            <div>
+              <div className="cognition-stat-label">Recurring</div>
+              <div className="cognition-stat-value">{recurringCount}</div>
+            </div>
+          </div>
+          <div className="cognition-stat-card">
+            <div className="cognition-stat-icon orange"><TrendingUp size={17} /></div>
+            <div>
+              <div className="cognition-stat-label">Emerging Risks</div>
+              <div className="cognition-stat-value">{emergingCount}</div>
+            </div>
+          </div>
+          <div className="cognition-stat-card">
+            <div className="cognition-stat-icon red"><ShieldAlert size={17} /></div>
+            <div>
+              <div className="cognition-stat-label">Critical Priority</div>
+              <div className="cognition-stat-value">{criticalCount}</div>
+            </div>
+          </div>
         </div>
 
-        {/* Right Column: Detailed Pattern Traceability */}
-        <div className="lg:col-span-7">
-          {detailLoading ? (
-            <div className="bg-[#111827] border border-gray-800 rounded-xl p-8 flex items-center justify-center min-h-[400px]">
-              <div className="flex flex-col items-center">
-                <Activity className="w-6 h-6 text-purple-400 animate-spin mb-3" />
-                <p className="text-xs text-gray-400">Loading pattern details & traceability...</p>
-              </div>
+        {/* Filter bar */}
+        <div className="filter-bar">
+          <div className="filter-type-group">
+            <span className="filter-label"><Filter size={12} /> Type:</span>
+            {['ALL', 'RECURRING', 'EMERGING', 'COMPOUNDING', 'SYSTEMIC'].map(type => (
+              <button
+                key={type}
+                className={`filter-btn${filterType === type ? ' active' : ''}`}
+                onClick={() => setFilterType(type)}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+
+          <div className="filter-right">
+            <div className="search-wrap">
+              <Search size={13} />
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Search patterns or assets..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
             </div>
-          ) : selectedPattern ? (
-            <div className="bg-[#111827] border border-gray-800 rounded-xl p-6 space-y-6 sticky top-6">
-              {/* Pattern Header */}
-              <div>
-                <div className="flex items-center justify-between gap-3 mb-2">
-                  <span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border flex items-center gap-1.5 ${PATTERN_TYPE_BG[selectedPattern.pattern_type] || 'bg-gray-800 text-gray-300'}`}>
-                    {PATTERN_TYPE_ICON[selectedPattern.pattern_type] && (
-                      <span className="w-4 h-4">
-                        {(() => {
-                          const IconComp = PATTERN_TYPE_ICON[selectedPattern.pattern_type]
-                          return <IconComp className="w-4 h-4" />
-                        })()}
+            <select
+              className="filter-select"
+              value={filterPriority}
+              onChange={e => setFilterPriority(e.target.value)}
+            >
+              <option value="ALL">All Priorities</option>
+              <option value="CRITICAL">Critical</option>
+              <option value="HIGH">High</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="LOW">Low</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Main grid */}
+        <div className="cognition-main-grid">
+          {/* Pattern list */}
+          <div className="pattern-list">
+            {filteredPatterns.length === 0 ? (
+              <div className="empty-state">
+                <TrendingUp size={36} style={{ opacity: 0.2 }} />
+                <h3>No patterns found</h3>
+                <p>
+                  {patterns.length === 0
+                    ? 'Submit multiple reports on the same asset and run Pattern Analysis.'
+                    : 'Try clearing your filters or search query.'}
+                </p>
+              </div>
+            ) : (
+              filteredPatterns.map(pattern => {
+                const TypeIcon = PATTERN_TYPE_ICON[pattern.pattern_type] || Zap
+                const typeStyle = TYPE_STYLE[pattern.pattern_type] || {}
+                const prioStyle = PRIORITY_STYLE[pattern.priority] || PRIORITY_STYLE.LOW
+                const isSelected = selectedPattern?.id === pattern.id
+
+                return (
+                  <div
+                    key={pattern.id}
+                    className={`pattern-card${isSelected ? ' selected' : ''}`}
+                    onClick={() => handleSelectPattern(pattern.id)}
+                  >
+                    <div className="pattern-card-top">
+                      <span className="pattern-type-badge" style={typeStyle}>
+                        <TypeIcon size={10} />{pattern.pattern_type}
                       </span>
-                    )}
-                    {selectedPattern.pattern_type} PRECURSOR
-                  </span>
-                  <span className={`text-xs font-bold px-3 py-1 rounded-full border ${PRIORITY_STYLES[selectedPattern.priority] || PRIORITY_STYLES.LOW}`}>
-                    {selectedPattern.priority} PRIORITY
+                      <span className="pattern-priority-badge" style={prioStyle}>
+                        {pattern.priority}
+                      </span>
+                    </div>
+                    <div className="pattern-title">{pattern.title}</div>
+                    <div className="pattern-card-footer">
+                      <span className="pattern-asset">{pattern.asset_id || pattern.location || 'GENERAL'}</span>
+                      <span className="pattern-report-count"><strong>{pattern.report_count}</strong> reports</span>
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+
+          {/* Detail panel */}
+          <div>
+            {detailLoading ? (
+              <div className="panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '22rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', color: '#5C6478' }}>
+                  <Activity size={20} className="spin" style={{ color: '#A78BFA' }} />
+                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.68rem', letterSpacing: '0.08em' }}>
+                    LOADING PATTERN DETAILS...
                   </span>
                 </div>
-
-                <h2 className="text-xl font-bold text-white mt-3 leading-snug">
-                  {selectedPattern.title}
-                </h2>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4 p-3 rounded-lg bg-gray-900/60 border border-gray-800/80 text-xs">
-                  <div>
-                    <span className="text-gray-500 block">Asset / Location</span>
-                    <span className="font-semibold text-gray-200">{selectedPattern.asset_id || selectedPattern.location || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500 block">Identified Hazard</span>
-                    <span className="font-semibold text-orange-400 truncate block">{selectedPattern.hazard || 'Unspecified'}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500 block">AI Confidence</span>
-                    <span className="font-semibold text-purple-400">
-                      {selectedPattern.confidence ? `${Math.round(selectedPattern.confidence * 100)}%` : 'N/A'}
+              </div>
+            ) : selectedPattern ? (
+              <div className="pattern-detail-panel">
+                <div className="pattern-detail-header">
+                  <div className="pattern-detail-badges">
+                    <span className="pattern-type-badge" style={{ ...(TYPE_STYLE[selectedPattern.pattern_type] || {}), fontSize: '0.65rem', padding: '0.22rem 0.6rem' }}>
+                      {PATTERN_TYPE_ICON[selectedPattern.pattern_type] && (() => {
+                        const I = PATTERN_TYPE_ICON[selectedPattern.pattern_type]
+                        return <I size={11} />
+                      })()}
+                      {selectedPattern.pattern_type} PRECURSOR
+                    </span>
+                    <span className="pattern-priority-badge" style={{ ...(PRIORITY_STYLE[selectedPattern.priority] || PRIORITY_STYLE.LOW), fontSize: '0.65rem', padding: '0.22rem 0.6rem' }}>
+                      {selectedPattern.priority} PRIORITY
                     </span>
                   </div>
-                </div>
-              </div>
+                  <h2 className="pattern-detail-title">{selectedPattern.title}</h2>
 
-              {/* AI Conclusion Narrative */}
-              {selectedPattern.description && (
-                <div>
-                  <h3 className="text-xs uppercase tracking-wider font-bold text-gray-400 mb-2 flex items-center gap-1.5">
-                    <BrainCircuit className="w-4 h-4 text-purple-400" />
-                    AI Pattern Synthesis
-                  </h3>
-                  <p className="text-sm text-gray-300 leading-relaxed bg-gray-900/40 p-4 rounded-xl border border-gray-800/60">
-                    {selectedPattern.description}
-                  </p>
-                </div>
-              )}
-
-              {/* Evidence Bullets */}
-              {Array.isArray(selectedPattern.evidence) && selectedPattern.evidence.length > 0 && (
-                <div>
-                  <h3 className="text-xs uppercase tracking-wider font-bold text-gray-400 mb-2 flex items-center gap-1.5">
-                    <AlertTriangle className="w-4 h-4 text-yellow-400" />
-                    Key Pattern Evidence
-                  </h3>
-                  <div className="space-y-2">
-                    {selectedPattern.evidence.map((item, idx) => (
-                      <div key={idx} className="flex items-start gap-2.5 text-xs text-gray-300 bg-gray-900/40 p-3 rounded-lg border border-gray-800/50">
-                        <span className="text-purple-400 shrink-0 font-bold">▸</span>
-                        <span>{item}</span>
-                      </div>
-                    ))}
+                  <div className="pattern-meta-grid">
+                    <div className="pattern-meta-item">
+                      <span>Asset / Location</span>
+                      <span>{selectedPattern.asset_id || selectedPattern.location || 'N/A'}</span>
+                    </div>
+                    <div className="pattern-meta-item">
+                      <span>Identified Hazard</span>
+                      <span style={{ color: '#FB923C' }}>{selectedPattern.hazard || 'Unspecified'}</span>
+                    </div>
+                    <div className="pattern-meta-item">
+                      <span>AI Confidence</span>
+                      <span style={{ color: '#F59E0B' }}>
+                        {selectedPattern.confidence ? `${Math.round(selectedPattern.confidence * 100)}%` : 'N/A'}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              )}
 
-              {/* Contributing Reports (Traceability) */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-xs uppercase tracking-wider font-bold text-gray-400 flex items-center gap-1.5">
-                    <Layers className="w-4 h-4 text-blue-400" />
-                    Contributing Reports (Traceability)
-                  </h3>
-                  <span className="text-xs text-gray-500">
-                    {selectedPattern.contributing_reports?.length || 0} linked reports
-                  </span>
-                </div>
-
-                <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                  {selectedPattern.contributing_reports && selectedPattern.contributing_reports.length > 0 ? (
-                    selectedPattern.contributing_reports.map((reportLink) => (
-                      <div
-                        key={reportLink.report_id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-gray-900/70 border border-gray-800 hover:border-gray-700 text-xs transition-colors"
-                      >
-                        <div className="min-w-0 pr-2">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-blue-400 font-medium">
-                              #{String(reportLink.report_id).substring(0, 8)}
-                            </span>
-                            <span className="text-gray-400 uppercase text-[10px] bg-gray-800 px-1.5 py-0.5 rounded font-semibold">
-                              {reportLink.report_type || 'INCIDENT'}
-                            </span>
-                          </div>
-                          <p className="text-gray-500 text-[11px] truncate mt-0.5">
-                            Asset: {reportLink.asset_id || 'N/A'}
-                          </p>
-                        </div>
-
-                        <div className="flex items-center gap-3 shrink-0">
-                          {reportLink.similarity_score !== undefined && reportLink.similarity_score !== null && (
-                            <span className="text-[11px] text-purple-300 font-mono bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded">
-                              {(reportLink.similarity_score * 100).toFixed(0)}% match
-                            </span>
-                          )}
-                          <Link
-                            to={`/reports/${reportLink.report_id}`}
-                            className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors"
-                            title="View Report Details"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </Link>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="p-4 rounded-lg bg-gray-900/40 border border-gray-800 text-center text-xs text-gray-500">
-                      No individual report links recorded for this pattern.
+                {selectedPattern.description && (
+                  <div>
+                    <div className="pattern-section-title">
+                      <BrainCircuit size={12} style={{ color: '#A78BFA' }} />
+                      AI Pattern Synthesis
                     </div>
-                  )}
+                    <div className="pattern-synthesis">{selectedPattern.description}</div>
+                  </div>
+                )}
+
+                {Array.isArray(selectedPattern.evidence) && selectedPattern.evidence.length > 0 && (
+                  <div>
+                    <div className="pattern-section-title">
+                      <AlertTriangle size={12} style={{ color: '#F59E0B' }} />
+                      Key Pattern Evidence
+                    </div>
+                    <div className="evidence-list">
+                      {selectedPattern.evidence.map((item, idx) => (
+                        <div key={idx} className="evidence-item">
+                          <span className="evidence-bullet">▸</span>
+                          <span>{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <div className="pattern-section-title" style={{ justifyContent: 'space-between' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <Layers size={12} style={{ color: '#60A5FA' }} />
+                      Contributing Reports
+                    </span>
+                    <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#5C6478', fontSize: '0.68rem' }}>
+                      {selectedPattern.contributing_reports?.length || 0} linked
+                    </span>
+                  </div>
+
+                  <div className="contributing-list">
+                    {selectedPattern.contributing_reports?.length > 0 ? (
+                      selectedPattern.contributing_reports.map((rl) => (
+                        <div key={rl.report_id} className="contributing-item">
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                              <span className="contributing-id">#{String(rl.report_id).substring(0, 8)}</span>
+                              <span className="contributing-type">{rl.report_type || 'INCIDENT'}</span>
+                            </div>
+                            <div className="contributing-asset">Asset: {rl.asset_id || 'N/A'}</div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            {rl.similarity_score != null && (
+                              <span className="similarity-badge">
+                                {(rl.similarity_score * 100).toFixed(0)}% match
+                              </span>
+                            )}
+                            <Link
+                              to={`/reports/${rl.report_id}`}
+                              style={{ color: '#5C6478', padding: '0.25rem', display: 'flex', transition: 'color 0.2s' }}
+                              title="View Report"
+                            >
+                              <ExternalLink size={12} />
+                            </Link>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div style={{ padding: '0.875rem', textAlign: 'center', fontSize: '0.75rem', color: '#5C6478', fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.05em' }}>
+                        NO LINKED REPORTS
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="detail-action-bar">
+                  <Link
+                    to={`/reports?asset=${encodeURIComponent(selectedPattern.asset_id || selectedPattern.location || '')}`}
+                    className="detail-action-link"
+                  >
+                    <ExternalLink size={13} />
+                    View all asset reports in Reports Explorer
+                  </Link>
                 </div>
               </div>
-
-              {/* Action bar */}
-              <div className="pt-3 border-t border-gray-800 flex items-center justify-between">
-                <Link
-                  to={`/reports?asset=${encodeURIComponent(selectedPattern.asset_id || selectedPattern.location || '')}`}
-                  className="inline-flex items-center gap-2 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  View all asset reports in Reports Explorer
-                </Link>
+            ) : (
+              <div className="panel" style={{
+                minHeight: '16rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem', letterSpacing: '0.07em',
+                color: '#5C6478', textAlign: 'center'
+              }}>
+                SELECT A PATTERN TO INSPECT DETAILS
               </div>
-            </div>
-          ) : (
-            <div className="bg-[#111827] border border-gray-800 rounded-xl p-8 text-center text-gray-500">
-              Select a pattern on the left to inspect detailed AI synthesis and report traceability.
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -2,20 +2,21 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getReport } from '../services/api'
 import { ChevronLeft, ShieldAlert, CheckCircle, HelpCircle, Activity, AlertTriangle, FileText, Zap } from 'lucide-react'
+import '../ops/styles/intelligence.css'
 
-const STATUS_COLORS = {
-  RESOLVED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  ANALYZED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  REVIEW: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-  PENDING: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
-  ERROR: 'bg-red-500/10 text-red-400 border-red-500/20',
+const STATUS_CLASS = {
+  RESOLVED: 'badge-resolved',
+  ANALYZED: 'badge-analyzed',
+  REVIEW:   'badge-review',
+  PENDING:  'badge-error',
+  ERROR:    'badge-error',
 }
 
 export default function ReportDetails() {
   const { id } = useParams()
   const [report, setReport] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError]   = useState(null)
 
   useEffect(() => {
     getReport(id)
@@ -25,128 +26,134 @@ export default function ReportDetails() {
   }, [id])
 
   if (loading) return (
-    <div className="flex justify-center p-12">
-      <Activity className="w-8 h-8 text-blue-500 animate-spin" />
+    <div className="loading-screen">
+      <Activity size={24} className="spin" style={{ color: '#F59E0B' }} />
+      <span>LOADING REPORT...</span>
     </div>
   )
-  if (error) return <div className="p-8 text-center text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl m-8">{error}</div>
+  if (error) return <div className="error-banner">{error}</div>
   if (!report) return null
 
   const a = report.analysis || {}
   const confidencePercent = a.confidence ? Math.round(a.confidence * 100) : 0
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="mb-6 flex items-center justify-between">
-        <Link to="/reports" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm font-medium">
-          <ChevronLeft className="w-4 h-4" /> Back to Reports
+    <div className="detail-page-wrap">
+      <div className="detail-top-bar">
+        <Link to="/reports" className="back-link">
+          <ChevronLeft size={15} /> Back to Reports
         </Link>
-        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${STATUS_COLORS[report.status] || STATUS_COLORS.PENDING}`}>
+        <span className={`badge ${STATUS_CLASS[report.status] || 'badge-error'}`}>
           Status: {report.status}
         </span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left Column - Raw Report */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-[#111827] border border-gray-800 rounded-xl p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-gray-400" /> Source Report
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Report Type</p>
-                <p className="text-gray-300 font-medium">{report.report_type.replace('_', ' ')}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Location</p>
-                  <p className="text-gray-300">{report.location || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Asset ID</p>
-                  <p className="text-gray-300">{report.asset_id || 'N/A'}</p>
-                </div>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Description</p>
-                <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800 text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
-                  {report.report_text}
-                </div>
+      <div className="detail-grid">
+        {/* Left — Source Report */}
+        <div className="panel">
+          <h2 className="detail-section-title">
+            <FileText size={16} style={{ color: '#8892A4' }} />
+            Source Report
+          </h2>
+
+          <div className="detail-field">
+            <div className="detail-field-label">Report Type</div>
+            <div className="detail-field-value">{report.report_type.replace(/_/g, ' ')}</div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+            <div className="detail-field">
+              <div className="detail-field-label">Location</div>
+              <div className="detail-field-value">{report.location || 'N/A'}</div>
+            </div>
+            <div className="detail-field">
+              <div className="detail-field-label">Asset ID</div>
+              <div className="detail-field-value" style={{ fontFamily: 'JetBrains Mono, monospace', color: '#60A5FA' }}>
+                {report.asset_id || 'N/A'}
               </div>
             </div>
+          </div>
+
+          <div className="detail-field">
+            <div className="detail-field-label">Description</div>
+            <div className="detail-text-block">{report.report_text}</div>
           </div>
         </div>
 
-        {/* Right Column - AI Analysis */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-[#111827] border border-gray-800 rounded-xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <ShieldAlert className={`w-6 h-6 ${a.sif_potential ? 'text-red-500' : 'text-emerald-500'}`} />
-                AI Risk Assessment
-              </h2>
-              <div className="flex items-center gap-4">
-                <div className="text-right">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Risk Score</p>
-                  <p className={`text-xl font-bold ${a.sif_potential ? 'text-red-400' : 'text-emerald-400'}`}>{a.risk_score || 0}</p>
+        {/* Right — AI Analysis */}
+        <div className="panel">
+          <div className="risk-header">
+            <h2 className="detail-section-title" style={{ margin: 0 }}>
+              <ShieldAlert size={17} style={{ color: a.sif_potential ? '#EF4444' : '#10B981' }} />
+              AI Risk Assessment
+            </h2>
+            <div className="risk-scores">
+              <div className="risk-score-item">
+                <div className="risk-score-label">Risk Score</div>
+                <div className="risk-score-value" style={{ color: a.sif_potential ? '#F87171' : '#34D399' }}>
+                  {a.risk_score || 0}
                 </div>
-                <div className="w-px h-8 bg-gray-800"></div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Confidence</p>
-                  <p className={`text-xl font-bold ${confidencePercent >= 90 ? 'text-emerald-400' : confidencePercent >= 70 ? 'text-yellow-400' : 'text-red-400'}`}>{confidencePercent}%</p>
+              </div>
+              <div className="risk-score-divider" />
+              <div className="risk-score-item">
+                <div className="risk-score-label">Confidence</div>
+                <div className="risk-score-value" style={{
+                  color: confidencePercent >= 90 ? '#34D399'
+                       : confidencePercent >= 70 ? '#F59E0B'
+                       : '#F87171'
+                }}>
+                  {confidencePercent}%
                 </div>
               </div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800">
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Hazard Identified</p>
-                <p className="text-white font-medium flex items-start gap-2">
-                  <AlertTriangle className="w-4 h-4 text-orange-400 mt-0.5 shrink-0" />
-                  {a.hazard || 'None detected'}
-                </p>
-              </div>
-              <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800">
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Energy Source</p>
-                <p className="text-white font-medium flex items-start gap-2">
-                  <Zap className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
-                  {a.energy_source || 'None significant'}
-                </p>
-              </div>
-              <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800">
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Barrier Status</p>
-                <p className="text-white font-medium flex items-start gap-2">
-                  {a.barrier_status === 'INTACT' ? <CheckCircle className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" /> : <ShieldAlert className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />}
-                  {a.barrier || 'No barrier specified'}
-                </p>
-              </div>
-              <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800">
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">IOGP Life-Saving Rule</p>
-                <p className="text-blue-400 font-bold tracking-tight">
-                  {a.iogp_rule || 'N/A'}
-                </p>
-              </div>
-            </div>
-
-            <div>
-              <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">AI Rationale</p>
-              <div className="bg-blue-500/5 p-5 rounded-lg border border-blue-500/20 text-gray-300 text-sm leading-relaxed">
-                {a.rationale || 'No rationale provided by AI.'}
-              </div>
-            </div>
-
-            {a.requires_followup && (
-              <div className="mt-6 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 flex gap-4 items-start">
-                <HelpCircle className="w-6 h-6 text-yellow-500 shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-yellow-400 font-semibold mb-1">Missing Context (Review Required)</h4>
-                  <p className="text-yellow-500/80 text-sm">{a.followup_question}</p>
-                </div>
-              </div>
-            )}
           </div>
+
+          <div className="analysis-grid">
+            <div className="analysis-cell">
+              <div className="detail-field-label">Hazard Identified</div>
+              <div className="detail-field-value" style={{ display: 'flex', alignItems: 'flex-start', gap: '0.4rem', marginTop: '0.4rem' }}>
+                <AlertTriangle size={14} style={{ color: '#F59E0B', flexShrink: 0, marginTop: '2px' }} />
+                {a.hazard || 'None detected'}
+              </div>
+            </div>
+            <div className="analysis-cell">
+              <div className="detail-field-label">Energy Source</div>
+              <div className="detail-field-value" style={{ display: 'flex', alignItems: 'flex-start', gap: '0.4rem', marginTop: '0.4rem' }}>
+                <Zap size={14} style={{ color: '#60A5FA', flexShrink: 0, marginTop: '2px' }} />
+                {a.energy_source || 'None significant'}
+              </div>
+            </div>
+            <div className="analysis-cell">
+              <div className="detail-field-label">Barrier Status</div>
+              <div className="detail-field-value" style={{ display: 'flex', alignItems: 'flex-start', gap: '0.4rem', marginTop: '0.4rem' }}>
+                {a.barrier_status === 'INTACT'
+                  ? <CheckCircle size={14} style={{ color: '#34D399', flexShrink: 0, marginTop: '2px' }} />
+                  : <ShieldAlert size={14} style={{ color: '#F87171', flexShrink: 0, marginTop: '2px' }} />}
+                {a.barrier || 'No barrier specified'}
+              </div>
+            </div>
+            <div className="analysis-cell">
+              <div className="detail-field-label">IOGP Life-Saving Rule</div>
+              <div className="detail-field-value" style={{ color: '#60A5FA', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.82rem', fontWeight: 700, marginTop: '0.4rem' }}>
+                {a.iogp_rule || 'N/A'}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div className="detail-field-label" style={{ marginBottom: '0.6rem' }}>AI Rationale</div>
+            <div className="rationale-block">{a.rationale || 'No rationale provided by AI.'}</div>
+          </div>
+
+          {a.requires_followup && (
+            <div className="followup-block">
+              <HelpCircle size={18} style={{ color: '#F59E0B', flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <h4>Missing Context (Review Required)</h4>
+                <p>{a.followup_question}</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

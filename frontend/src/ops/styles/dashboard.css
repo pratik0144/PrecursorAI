@@ -1,0 +1,288 @@
+/* ──────────────────────────────────────────
+   DASHBOARD — Petronex monitoring style
+   ────────────────────────────────────────── */
+
+/* Status ticker strip at top */
+.dash-ticker {
+  background-color: #080A0F;
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 2rem;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  overflow: hidden;
+}
+
+.dash-ticker-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dash-ticker-item.online {
+  color: var(--status-success);
+}
+
+.dash-ticker-item.warn {
+  color: var(--amber);
+}
+
+.dash-ticker-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background-color: currentColor;
+  flex-shrink: 0;
+}
+
+.dash-ticker-sep {
+  color: var(--border-color);
+  font-size: 0.9rem;
+}
+
+/* Dashboard layout */
+.dashboard-wrap {
+  padding: 1.75rem 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.dashboard-title {
+  font-family: var(--font-head);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.dashboard-subtitle {
+  margin-top: 0.25rem;
+  font-size: 0.82rem;
+  color: var(--text-label);
+}
+
+.dash-timestamp {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  text-align: right;
+}
+
+.dash-timestamp strong {
+  color: var(--amber);
+}
+
+/* ── Metric Cards ─────────────────────────── */
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+.metric-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1.25rem 1.25rem 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.25s, background-color 0.25s;
+}
+
+.metric-card:hover {
+  border-color: #2E3548;
+  background-color: var(--bg-card-hover);
+}
+
+/* Left accent bar */
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  width: 3px;
+  border-radius: 10px 0 0 10px;
+}
+
+.metric-card.blue::before   { background-color: #3B82F6; }
+.metric-card.green::before  { background-color: #10B981; }
+.metric-card.orange::before { background-color: var(--amber); }
+.metric-card.red::before    { background-color: #EF4444; }
+
+.metric-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.metric-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.metric-icon.blue   { background-color: rgba(59,130,246,0.12); color: #60A5FA; }
+.metric-icon.green  { background-color: rgba(16,185,129,0.12); color: #34D399; }
+.metric-icon.orange { background-color: var(--amber-dim); color: var(--amber); }
+.metric-icon.red    { background-color: rgba(239,68,68,0.12); color: #F87171; }
+
+.metric-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-label);
+  font-family: var(--font-mono);
+}
+
+.metric-value {
+  font-family: var(--font-head);
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--text-data);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.metric-sub {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+/* ── Charts Row ──────────────────────────── */
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.panel {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1.5rem;
+}
+
+.panel-title {
+  font-family: var(--font-head);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 1.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.panel-title::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 14px;
+  background: var(--amber);
+  border-radius: 2px;
+}
+
+/* List items inside panels */
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.list-item:last-child { border-bottom: none; }
+
+.list-label {
+  font-size: 0.82rem;
+  color: var(--text-main);
+}
+
+.list-value {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--amber);
+  background-color: var(--amber-dim);
+  border: 1px solid var(--border-amber);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* ── Intelligence Banner ─────────────────── */
+.intelligence-banner {
+  background: linear-gradient(135deg, rgba(109, 40, 217, 0.18) 0%, var(--bg-card) 60%);
+  border: 1px solid rgba(109, 40, 217, 0.25);
+  border-radius: 10px;
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.intelligence-banner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, #7C3AED, #4F46E5);
+}
+
+.intelligence-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.intelligence-banner-icon {
+  background-color: rgba(109, 40, 217, 0.15);
+  border: 1px solid rgba(109, 40, 217, 0.25);
+  padding: 0.75rem;
+  border-radius: 10px;
+  color: #A78BFA;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.intelligence-banner h2 {
+  font-family: var(--font-head);
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.intelligence-banner p {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-label);
+}

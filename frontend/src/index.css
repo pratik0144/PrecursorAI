@@ -1,14 +1,6 @@
-@import "tailwindcss";
-
-/* Base reset */
+/* Global reset — design system is in ops/styles/base.css */
 *, *::before, *::after {
   box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  -webkit-font-smoothing: antialiased;
 }
 
 #root {
