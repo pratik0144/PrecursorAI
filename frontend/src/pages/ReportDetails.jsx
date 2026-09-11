@@ -4,6 +4,7 @@ import { getReport } from '../services/api'
 import { ChevronLeft, ShieldAlert, CheckCircle, HelpCircle, Activity, AlertTriangle, FileText, Zap } from 'lucide-react'
 
 const STATUS_COLORS = {
+  RESOLVED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
   ANALYZED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
   REVIEW: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
   PENDING: 'bg-gray-500/10 text-gray-400 border-gray-500/20',

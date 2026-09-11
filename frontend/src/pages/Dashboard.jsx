@@ -7,7 +7,8 @@ import { useCallback } from 'react'
 import { usePolling } from '../hooks/usePolling'
 import { getDashboardSummary } from '../services/api'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts'
-import { ShieldAlert, FileText, Activity, AlertTriangle } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ShieldAlert, FileText, Activity, AlertTriangle, BrainCircuit, ArrowRight } from 'lucide-react'
 
 const RISK_COLORS = {
   ROUTINE: '#3b82f6',
@@ -171,6 +172,31 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Pattern Intelligence & Recurring Precursors Banner */}
+      <div className="bg-[#111827] border border-purple-500/20 rounded-xl p-6 mt-8 flex flex-col md:flex-row items-center justify-between gap-4 bg-gradient-to-r from-purple-950/20 via-gray-900 to-gray-900">
+        <div className="flex items-center gap-4">
+          <div className="bg-purple-600/20 border border-purple-500/30 p-3 rounded-xl">
+            <BrainCircuit className="w-8 h-8 text-purple-400" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              Pattern Intelligence & Recurring Precursors
+            </h2>
+            <p className="text-xs text-gray-400 mt-1">
+              Tier 2 cross-report safety pattern detection & multi-report precursor analysis.
+            </p>
+          </div>
+        </div>
+        <Link
+          to="/cognition"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-purple-600 hover:bg-purple-500 text-white transition-all shadow-lg shadow-purple-500/25 shrink-0"
+        >
+          View Pattern Intelligence
+          <ArrowRight className="w-4 h-4" />
+        </Link>
+      </div>
     </div>
   )
 }
+

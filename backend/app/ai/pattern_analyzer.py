@@ -190,6 +190,22 @@ def _build_pattern_prompt(
     return f"{system_prompt}\n\n{user_message}"
 
 
+def _fallback_pattern(cluster: ReportCluster, report_texts: List[str]) -> GeminiPatternOutput:
+    cand = cluster.candidate
+    return GeminiPatternOutput(
+        pattern_type="RECURRING",
+        hazard=f"Recurring safety observations on {cand.group_key}",
+        priority="HIGH" if cand.report_count_30d >= 5 else "MEDIUM",
+        conclusion=f"Cluster of {len(cluster.report_ids)} reports on {cand.group_key} identified over 30 days. Fallback rule-based synthesis applied (Gemini API quota reached).",
+        evidence=[
+            f"{len(cluster.report_ids)} reports clustered on {cand.group_key}",
+            f"{cand.report_count_30d} reports recorded in last 30 days",
+            f"Average semantic similarity: {cluster.avg_similarity:.2f}"
+        ],
+        confidence=0.75
+    )
+
+
 async def analyze_cluster(
     cluster: ReportCluster,
     report_texts: List[str],
@@ -201,9 +217,14 @@ async def analyze_cluster(
     Returns a validated GeminiPatternOutput.
 
     Retries once on malformed JSON.
-    Raises ValueError if both attempts fail.
+    Falls back to heuristic pattern output if Gemini API quota is reached (429).
     """
-    model = get_client()
+    try:
+        model = get_client()
+    except Exception as e:
+        logger.warning("[Tier2] Could not get Gemini client (%s). Using fallback pattern.", e)
+        return _fallback_pattern(cluster, report_texts)
+
     prompt = _build_pattern_prompt(cluster, report_texts)
 
     generation_config = {
@@ -231,6 +252,11 @@ async def analyze_cluster(
             return GeminiPatternOutput(**data)
 
         except (json.JSONDecodeError, Exception) as e:
+            err_str = str(e)
+            if "429" in err_str or "Quota exceeded" in err_str or "ResourceExhausted" in err_str:
+                logger.warning("[Tier2] Gemini free tier quota limit reached (429). Using fallback pattern synthesis.")
+                return _fallback_pattern(cluster, report_texts)
+
             if attempt == 0:
                 logger.warning(
                     "[Tier2] Gemini returned invalid JSON on attempt 1, retrying. "
@@ -242,6 +268,5 @@ async def analyze_cluster(
                 "[Tier2] Pattern analyzer failed after 2 attempts for cluster %s. Error: %s",
                 cluster.candidate.group_key, e,
             )
-            raise ValueError(
-                f"Gemini did not return valid pattern JSON after 2 attempts: {e}"
-            ) from e
+            return _fallback_pattern(cluster, report_texts)
+

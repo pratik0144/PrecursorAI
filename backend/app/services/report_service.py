@@ -118,10 +118,20 @@ async def submit_and_analyze(payload: ReportCreate, db: AsyncSession) -> ReportS
         )
 
     except Exception as e:
-        logger.exception("Tier 1 pipeline failed for report %s", report.id)
+        logger.exception("Tier 1 pipeline exception for report %s", report.id)
         report.status = "ERROR"
         await db.commit()
-        raise
+        return ReportSubmitResponse(
+            report_id=report.id,
+            status="ERROR",
+            analysis=AnalysisSummary(
+                sif_potential=False,
+                risk_level="REVIEW",
+                risk_score=50,
+                iogp_rule=None
+            )
+        )
+
 
 
 async def list_reports(skip: int, limit: int, db: AsyncSession) -> List[ReportListItem]:

@@ -51,7 +51,7 @@ async def list_alerts(unread_only: bool, skip: int, limit: int, db: AsyncSession
 
 
 async def mark_read(alert_id: uuid.UUID, db: AsyncSession) -> AlertResponse:
-    """Mark a specific alert as read."""
+    """Mark a specific alert as read and set linked report status to RESOLVED."""
     stmt = select(Alert).where(Alert.id == alert_id)
     result = await db.execute(stmt)
     alert = result.scalars().first()
@@ -60,6 +60,16 @@ async def mark_read(alert_id: uuid.UUID, db: AsyncSession) -> AlertResponse:
         raise ValueError("Alert not found")
         
     alert.is_read = True
+    
+    # If alert is linked to a report, set report status to RESOLVED (green state)
+    if alert.report_id:
+        r_stmt = select(Report).where(Report.id == alert.report_id)
+        r_result = await db.execute(r_stmt)
+        linked_report = r_result.scalars().first()
+        if linked_report:
+            linked_report.status = "RESOLVED"
+            
     await db.commit()
     await db.refresh(alert)
     return AlertResponse.model_validate(alert)
+

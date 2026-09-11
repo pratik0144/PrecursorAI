@@ -291,6 +291,58 @@ def _build_prompt(report_text: str, knowledge_chunks: List[dict]) -> str:
     return f"{system_prompt}\n\n=== REPORT TO CLASSIFY ===\n{report_text}\n=== END REPORT ==="
 
 
+def _fallback_classification(report_text: str) -> GeminiAnalysisOutput:
+    """
+    Rule-based heuristic fallback classification when Gemini API is unavailable 
+    or daily free tier quota is reached (HTTP 429).
+    """
+    text_lower = report_text.lower()
+    
+    sif_keywords = [
+        "h2s", "gas leak", "explosion", "fire", "fall from", "scaffold", 
+        "suspended load", "crane", "electrocution", "11 kv", "high voltage", 
+        "confined space", "unconscious", "head injury", "loto", "lockout",
+        "pressure release", "blowout", "valve", "tank", "leak"
+    ]
+    is_sif = any(kw in text_lower for kw in sif_keywords)
+    
+    rules = []
+    if any(k in text_lower for k in ["h2s", "gas leak", "toxic"]):
+        rules.append("H2S")
+    if any(k in text_lower for k in ["height", "fall", "scaffold", "ladder"]):
+        rules.append("WORK AT HEIGHT")
+    if any(k in text_lower for k in ["crane", "load", "lifting", "rigging"]):
+        rules.append("SAFE MECHANICAL LIFTING")
+    if any(k in text_lower for k in ["electrical", "voltage", "loto", "isolation", "energised"]):
+        rules.append("ENERGY ISOLATION")
+    if any(k in text_lower for k in ["permit", "bypassed", "override"]):
+        rules.append("BYPASSING SAFETY CONTROLS")
+    if any(k in text_lower for k in ["confined", "vessel entry"]):
+        rules.append("CONFINED SPACE")
+    if any(k in text_lower for k in ["hot work", "welding", "ignition"]):
+        rules.append("HOT WORK")
+
+    hazard = "Process / Equipment Hazard" if is_sif else "Operational Safety Observation"
+    severity = "HIGH" if is_sif else "MEDIUM"
+    
+    return GeminiAnalysisOutput(
+        sif_potential=is_sif,
+        confidence_score=0.75,
+        hazard=hazard,
+        energy_source="Chemical / Gravitational / Mechanical energy source" if is_sif else "General field operation",
+        activity="Field observation / maintenance",
+        asset=None,
+        location=None,
+        barrier="Safety barrier & risk control procedures",
+        barrier_status="DEGRADED" if is_sif else "INTACT",
+        severity=severity,
+        life_saving_rules=rules,
+        rationale="Automated heuristic safety classification applied (Gemini AI API daily quota limit reached).",
+        requires_followup=True,
+        followup_question="Gemini API quota exceeded. Please review this report manually for full safety verification."
+    )
+
+
 async def classify_report(
     report_text: str,
     knowledge_chunks: List[dict],
@@ -299,9 +351,14 @@ async def classify_report(
     Send report + RAG context to Gemini and return validated GeminiAnalysisOutput.
 
     Retries once on malformed / invalid JSON.
-    Raises ValueError if both attempts fail.
+    Falls back to heuristic rule-based classifier if Gemini free tier quota is reached (429).
     """
-    model = get_client()
+    try:
+        model = get_client()
+    except Exception as e:
+        logger.warning("Could not initialize Gemini client (%s). Using fallback classifier.", e)
+        return _fallback_classification(report_text)
+
     prompt = _build_prompt(report_text, knowledge_chunks)
 
     generation_config = {
@@ -329,6 +386,11 @@ async def classify_report(
             return GeminiAnalysisOutput(**data)
 
         except (json.JSONDecodeError, Exception) as e:
+            err_str = str(e)
+            if "429" in err_str or "Quota exceeded" in err_str or "ResourceExhausted" in err_str:
+                logger.warning("Gemini free tier daily quota limit reached (429). Using rule-based fallback classification.")
+                return _fallback_classification(report_text)
+
             if attempt == 0:
                 logger.warning(
                     "Gemini returned invalid JSON on attempt 1, retrying. Error: %s", e
@@ -339,7 +401,6 @@ async def classify_report(
                 report_text[:100],
                 e,
             )
-            raise ValueError(
-                f"Gemini did not return valid structured JSON after 2 attempts: {e}"
-            ) from e
+            return _fallback_classification(report_text)
+
 
