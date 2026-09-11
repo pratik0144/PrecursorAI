@@ -29,11 +29,13 @@ export const markAlertRead = (id) => api.patch(`/alerts/${id}/read`)
 // ── Patterns ──────────────────────────────────────────────────────────────────
 
 export const listPatterns = (params = {}) => api.get('/patterns', { params })
-export const getPattern = (id) => api.get(`/patterns/${id}`)
+export const getPatternDetail = (id) => api.get(`/patterns/${id}`)
+export const triggerPatternSweep = () => api.post('/patterns/sweep')
 
-// ── Cognition ─────────────────────────────────────────────────────────────────
+// ── Cognition (legacy stub) ────────────────────────────────────────────────────
 
 export const triggerCognitionSweep = () => api.post('/cognition/sweep')
 export const getCognitionStatus = () => api.get('/cognition/status')
 
 export default api
+

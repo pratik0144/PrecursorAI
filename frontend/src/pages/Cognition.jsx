@@ -8,7 +8,7 @@
  * - Pattern detail with contributing reports (traceability)
  */
 import { useState, useEffect } from 'react'
-import { listPatterns, getPattern, triggerCognitionSweep, getCognitionStatus } from '../services/api'
+import { listPatterns, getPatternDetail, triggerCognitionSweep, getCognitionStatus } from '../services/api'
 
 export default function Cognition() {
   const [patterns, setPatterns] = useState([])
@@ -27,7 +27,7 @@ export default function Cognition() {
   }, [])
 
   const handleSelectPattern = async (id) => {
-    const res = await getPattern(id)
+    const res = await getPatternDetail(id)
     setSelectedPattern(res.data)
   }
 

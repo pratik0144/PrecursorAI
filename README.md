@@ -1,401 +1,365 @@
-# PrecursorAI — Master Plan (Locked)
+﻿# PrecursorAI
 
-_This supersedes all earlier drafts. Everything below is the current, final decision._
-
-## 1. What it is
-
-An AI-powered safety intelligence system for OIL that reads unstructured Unsafe Act, Unsafe Condition, and Near-Miss reports, understands what happened, and determines whether a report contains a **Serious Injury & Fatality (SIF)** precursor.
-
-> **Tier 1 understands individual safety reports in real time. Tier 2 understands the collective story hidden across thousands of reports.**
-
-**One-line pitch:** Tier 1 turns a single messy safety report into structured, RAG-grounded, explainable SIF intelligence. Tier 2 takes accumulated reports and finds recurring or emerging patterns no individual report reveals. **AI prioritizes — safety professionals decide.**
+> **AI-powered safety intelligence system for Oil India Limited (OIL)**
+> Real-time SIF precursor detection (Tier 1) + historical cross-report pattern analysis (Tier 2)
 
 ---
 
-## 2. System Architecture (final, trimmed)
+## What It Does
 
-```
-                         ┌──────────────────────┐
-                         │      REACT UI        │
-                         │ Submit Report         │
-                         │ Dashboard             │
-                         │ Alerts                │
-                         │ Pattern Intelligence  │
-                         └──────────┬────────────┘
-                                    │
-                              REST (polling, no WebSocket)
-                                    │
-                                    ▼
-                     ┌─────────────────────────┐
-                     │        FASTAPI          │
-                     │  modular monolith        │
-                     └────────────┬────────────┘
-                                  │
-              ┌───────────────────┴───────────────────┐
-              ▼                                       ▼
-       ┌───────────────┐                       ┌───────────────┐
-       │    TIER 1     │                       │    TIER 2     │
-       │ Single Report │                       │ Many Reports  │
-       │ Preprocess    │                       │ SQL Stats     │
-       │ Embedding     │                       │ Similarity    │
-       │ RAG           │                       │ grouping      │
-       │ Gemini        │                       │ (cosine +     │
-       │ SIF Analysis  │                       │ connected     │
-       │ Risk Engine   │                       │ components)   │
-       │ IOGP Mapping  │                       │ Gemini        │
-       │               │                       │ Cognition     │
-       │               │                       │ Patterns      │
-       └───────┬───────┘                       └───────┬───────┘
-               │                                       │
-               └───────────────────┬───────────────────┘
-                                   ▼
-                         ┌──────────────────┐
-                         │   PostgreSQL     │
-                         │   + pgvector     │
-                         │ Reports          │
-                         │ AI Analysis      │
-                         │ Embeddings       │
-                         │ Knowledge Base   │
-                         │ Patterns         │
-                         │ Alerts           │
-                         └──────────────────┘
-```
+Oil field workers submit safety observations — unsafe acts, unsafe conditions, near-misses.
+PrecursorAI analyses every report in real time, scores it for **Serious Injury and Fatality (SIF)** potential, and sweeps historical reports to find recurring patterns no single report reveals alone.
 
-**What changed from the original design, and why:**
-
-| Original                        | Final decision                                     | Why                                                                                           |
-| ------------------------------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| WebSockets for live alerts      | Polling every 5–10s                                | Visually identical to a judge, far less to build/debug in 2–3 days                            |
-| Redis (cache, pub/sub, locking) | Dropped entirely                                   | Not needed at demo scale (hundreds–low thousands of reports); was already flagged as optional |
-| HDBSCAN/k-means clustering      | Cosine similarity threshold + connected components | Simpler to implement and debug, equally demoable, faster to tune                              |
-| Separate vector DB              | pgvector inside Postgres                           | One less service to deploy                                                                    |
-
-**Kept exactly as originally designed:** two-tier split, Gemini-for-understanding / Python-for-rules separation, deterministic risk engine gating the LLM, RAG grounding against IOGP Life-Saving Rules, human-in-the-loop review queue, full DB schema, `pattern_reports` traceability table.
+**The core design principle:** AI reasons and explains. Deterministic code decides.
+Gemini classifies hazards. Python computes the final risk score, risk level, and priority. The LLM never makes the final escalation call — every decision is auditable.
 
 ---
 
-## 3. Tier 1 — Real-Time SIF Triage
+## Tech Stack
 
-```
-Worker submits report
-        ↓
-FastAPI receives + saves raw report
-        ↓
-Preprocessing → embedding
-        ↓
-RAG: cosine similarity → top 3–5 relevant IOGP/knowledge chunks
-        ↓
-Gemini analysis (structured JSON) using report + retrieved chunks
-        ↓
-Validation of JSON schema
-        ↓
-Deterministic Risk Engine (score, confidence threshold)
-        ↓
-IOGP Rule Mapping
-        ↓
-Save analysis
-        ↓
- ┌───────────────┬─────────────────┐
-Routine       Needs Review      High/SIF
- ↓               ↓                 ↓
-Store          Human Review      Alert → Dashboard
-```
-
-**Gemini's job:** understanding — hazard, activity, energy source, barrier, barrier status, whether this looks like a SIF precursor, which IOGP rule applies, and why.
-
-**Python's job:** rules and thresholds — risk score, confidence threshold, escalation logic. The LLM never decides the final risk level on its own.
-
-**Tier 1 output schema:**
-
-```json
-{
-  "sif_potential": true,
-  "confidence_score": 0.91,
-  "hazard": "Hydrocarbon exposure",
-  "energy_source": "Pressurized hydrocarbon",
-  "activity": "Maintenance",
-  "asset": "P-17",
-  "location": "Unit 4",
-  "barrier": "Isolation",
-  "barrier_status": "FAILED",
-  "severity": "HIGH",
-  "risk_score": 87,
-  "life_saving_rules": ["Energy Isolation"],
-  "rationale": "...",
-  "requires_followup": false
-}
-```
-
-**Human-in-the-loop:** if `confidence < threshold` or `requires_followup = true`, the report routes to a Safety Officer review queue instead of auto-closing. The system never presents itself as the final safety authority.
+| Layer | Technology |
+|---|---|
+| **Frontend** | React 18, Vite, TailwindCSS, Recharts, Lucide Icons |
+| **Backend** | FastAPI (Python 3.11), SQLAlchemy (async), Pydantic v2 |
+| **Database** | PostgreSQL 17 + pgvector extension |
+| **AI / LLM** | Google Gemini 3.6 Flash (`gemini-3.6-flash`) |
+| **Embeddings** | Gemini Embedding 001 (`gemini-embedding-001`) — 3072-dimensional vectors |
+| **Vector Search** | pgvector `<=>` cosine distance operator (native PostgreSQL) |
 
 ---
 
-## 4. Tier 2 — Cognition Layer
+## Architecture Overview
 
 ```
-Thousands of Reports
-        ↓
-Deterministic Statistics (reports/asset, /location, /hazard, /barrier,
-  7-day vs 30-day counts, unique reporters, barrier failure frequency)
-        ↓
-Candidate Assets/Locations (crosses a min-count / min-frequency-change gate)
-        ↓
-Cosine similarity on existing embeddings
-        ↓
-Connected-components grouping → candidate pattern groups
-        ↓
-Gemini Cognition (given group + stats + counts + time info) →
-  recurring issues / trends / potential contributing relationships
-        ↓
-Deterministic validation → Store Pattern → HSSE Alert
-```
-
-Different workers describe the same issue differently ("minor oil seepage," "hydrocarbon residue below P-17," "small leakage during maintenance") — embeddings catch what keyword matching misses. The stats gate runs **before** the LLM sees anything, so Gemini is only ever asked to reason about groups that already look statistically real — it never freelances on noise. Relationships Gemini surfaces are labeled **potential contributing factors**, never proven causality.
-
----
-
-## 5. Database Schema (Postgres + pgvector)
-
-```
-users → reports ─┬─→ report_analysis
-                  └─→ report_embeddings
-                        ↓
-                     (Tier 2)
-                        ↓
-                     patterns → pattern_reports → alerts
-
-knowledge_chunks → knowledge_embeddings → (RAG)
-```
-
-- `users`: id, name, email, role, created_at
-- `reports`: id, report_text, report_type, asset_id, location, submitted_by, created_at, status
-- `report_analysis`: id, report_id, sif_potential, confidence, risk_score, risk_level, activity, hazard, energy_source, barrier, barrier_status, iogp_rule, severity, rationale, requires_followup, followup_question, created_at
-- `report_embeddings`: id, report_id, embedding, model, created_at
-- `knowledge_chunks`: id, chunk_id, title, chunk_text, source
-- `knowledge_embeddings`: id, chunk_id, embedding, model
-- `patterns`: id, pattern_type, title, description, asset_id, location, hazard, barrier, priority, confidence, report_count, first_seen, last_seen, status, evidence, created_at
-- `pattern_reports`: pattern_id, report_id, similarity_score — this is what lets you answer "why did the AI create this pattern?" with exact evidence
-- `alerts`: id, report_id, pattern_id, alert_type, severity, title, message, is_read, created_at
-
----
-
-## 6. API Surface (final, no WebSocket)
-
-```
-POST /api/v1/reports
-GET  /api/v1/reports
-GET  /api/v1/reports/{id}
-
-GET  /api/v1/dashboard/summary     ← polled by frontend every 5–10s
-
-GET   /api/v1/alerts
-PATCH /api/v1/alerts/{id}/read
-
-GET /api/v1/patterns
-GET /api/v1/patterns/{id}
-
-POST /api/v1/cognition/sweep
-GET  /api/v1/cognition/status
-```
-
-**Example — submit report:**
-
-```json
-// POST /api/v1/reports
-{
-  "report_type": "NEAR_MISS",
-  "report_text": "Technician entered tank without gas testing.",
-  "location": "Unit 4",
-  "asset_id": "TANK-17"
-}
-```
-
-```json
-// Response
-{
-  "report_id": "abc123",
-  "status": "ANALYZED",
-  "analysis": {
-    "sif_potential": true,
-    "risk_level": "HIGH",
-    "risk_score": 91,
-    "iogp_rule": "Confined Space"
-  }
-}
+Frontend (React/Vite :5173)
+    |
+    v
+FastAPI Backend (:8000)
+    |
+    |-- Tier 1: Real-time single-report pipeline  (on every POST /reports)
+    |       |
+    |       |-- Preprocessing -> Embedding -> RAG Retrieval
+    |       |-- Gemini Classification (hazard, SIF, barrier, severity)
+    |       |-- Deterministic Risk Engine (score + level)
+    |       `-- Triage & Alerting
+    |
+    `-- Tier 2: Historical pattern sweep  (on POST /patterns/sweep)
+            |
+            |-- SQL COUNT queries (Phase B)
+            |-- Cosine similarity clustering (Phase C)
+            |-- Gemini multi-report reasoning (Phase D)
+            |-- Deterministic rules engine (Phase E)
+            `-- Pattern persistence (Phase F)
+    |
+    v
+PostgreSQL + pgvector
+    |-- reports
+    |-- report_analysis
+    |-- report_embeddings       <- 3072-dim vectors per report
+    |-- knowledge_chunks        <- 438 IOGP/OIL rule chunks
+    |-- knowledge_embeddings    <- 3072-dim vectors per chunk
+    |-- patterns
+    |-- pattern_reports         <- join table (traceability)
+    `-- alerts
 ```
 
 ---
 
-## 7. Tech Stack (final)
+## Tier 1 — Real-Time Single-Report Analysis
 
-- **Frontend:** React (Vite), REST via fetch/axios, polling instead of WebSocket
-- **Backend:** FastAPI, modular monolith (`api/`, `services/`, `ai/`, `models/`, `schemas/`, `core/`)
-- **DB:** PostgreSQL + pgvector — one database for relational and vector data, no separate vector DB
-- **LLM:** Gemini, structured JSON output, used for Tier 1 classification and Tier 2 cognition
-- **Explicitly dropped:** Spring Boot, Redis, WebSockets, HDBSCAN/k-means
+**Triggered:** Every time a report is submitted via `POST /api/v1/reports`
+**Goal:** Within seconds, classify every incoming report for SIF potential and route it appropriately.
 
----
-
-## 8. File Structure
+### Pipeline (9 steps)
 
 ```
-precursor-ai/
-├── frontend/src/{components,pages,services,hooks,types}, App.jsx
-├── backend/app/
-│   ├── main.py
-│   ├── api/{reports,dashboard,alerts,patterns,cognition}.py
-│   ├── models/{report,analysis,embedding,pattern,alert}.py
-│   ├── schemas/{report,analysis,pattern,dashboard}.py
-│   ├── services/{report,triage,cognition,pattern,alert}_service.py
-│   ├── ai/{gemini,preprocessing,embeddings,rag,classifier,risk_engine,cognition}.py
-│   └── core/{config,database}.py
-├── backend/scripts/{ingest_knowledge,generate_embeddings,seed_reports}.py
-├── data/{knowledge,synthetic_reports}/
-└── README.md
+Report Text
+    |
+    v  Step 1: Preprocessing (preprocessing.py)
+Strip control chars, collapse whitespace, truncate to 4000 chars
+    |
+    v  Step 2: Embedding (embeddings.py)
+gemini-embedding-001 -> 3072-dimensional float vector
+    |
+    v  Step 3: Save ReportEmbedding to DB
+Stored in report_embeddings table for Tier 2 reuse
+    |
+    v  Step 4: RAG Retrieval (rag.py)
+pgvector cosine similarity: report vector <=> knowledge_embeddings
+Top-5 IOGP/OIL safety rule chunks retrieved
+    |
+    v  Step 5: Gemini Classification (classifier.py)
+Structured JSON prompt -> gemini-3.6-flash
+8 few-shot examples, injected RAG chunks, SIF criteria, IOGP rules
+    |
+    v  Step 6: Validate GeminiAnalysisOutput schema
+Pydantic validation; retries once on malformed JSON
+    |
+    v  Step 7: Deterministic Risk Engine (risk_engine.py)
+compute_risk_score() + determine_risk_level()  <- AI never does this
+    |
+    v  Step 8: Save ReportAnalysis to DB
+    |
+    v  Step 9: Triage & Alerting (triage_service.py)
+Route to ANALYZED | REVIEW, create Alert if HIGH or SIF
 ```
 
-_(no `websocket/` or `redis.py` — cut along with those features)_
+### RAG Knowledge Base
 
----
+- **438 chunks** split from two IOGP/OIL safety rulebooks
+- Ingested via `scripts/ingest_knowledge.py`
+- Chunk size: 300 tokens, 50-token overlap
+- Stored in `knowledge_chunks` + `knowledge_embeddings` (pgvector)
+- At query time: top-5 most-similar chunks injected verbatim into the Gemini prompt
 
-## 10. Day-by-Day Plan (2–3 days)
+### SIF Criteria (Three-Factor Test)
 
-**Day 1 — Foundations (parallel):**
+A report is classified as **SIF-potential** only if **all three** are present:
 
-- A: FastAPI skeleton, reports endpoints, Gemini structured-extraction prompt, risk engine, stub RAG
-- B: Full schema migration, synthetic generator (150–300 reports, 3–4 intentionally injected patterns), start knowledge base ingestion
-- C: React scaffold, 4 views routed, Submission form against agreed contract, static Dashboard/Alerts with placeholder data
-- D: Repo/CI setup, API contract doc, eval plan (what ground-truth labels the generator needs to emit)
-- **Checkpoint:** submit → Gemini analysis → risk score → saved to DB, working end-to-end for one report
+| Factor | Description |
+|---|---|
+| **Energy source** | Gravitational, mechanical, chemical (H2S/flammables), electrical, pressure, thermal, or kinetic |
+| **Person in proximity** | A person was or could be in the path of harm |
+| **Barrier failed/missing** | A safety control that should have prevented exposure was absent, bypassed, degraded, or failed |
 
-**Day 2 — Core intelligence:**
+If any one factor is absent or uncertain: Non-SIF-potential, with `requires_followup = true` if uncertain.
 
-- A: Real embedding + top-k RAG retrieval wired in, human-in-the-loop review queue, error handling for malformed Gemini JSON
-- B: Full dataset embedded, Tier 2 deterministic stats, similarity grouping, first pass of Gemini cognition prompt
-- C: Dashboard + Alerts wired to real endpoints with polling, Pattern Intelligence view started
-- D: Run eval script on Tier 1 output, start deck, pick 2–3 "hero" demo scenarios
-- **Checkpoint:** Tier 2 sweep surfaces the injected patterns as real alerts, visible in the UI
+### Risk Score Formula
 
-**Day 3 — Polish, eval, demo prep (half day if 2.5–3 days total):**
-
-- A: Edge-case bug fixes, tighten rationale text for on-screen readability
-- B: False-positive suppression, threshold tuning, polish `pattern_reports` evidence display — your best differentiator
-- C: Visual polish, risk-level color coding, working click-throughs on Report Details / View Evidence
-- D: Finalize eval numbers in the deck, full dry-run with real seeded data (timed), record a fallback video
-- **Checkpoint:** rehearsed run-through — live submit → flagged → contributes visibly to an existing pattern
-
----
-
-## 11. Demo Script (5–7 min)
-
-1. **Problem (30s)** — thousands of unstructured reports, precursors buried in noise
-2. **Live Tier 1 (90s)** — submit a report live, show structured extraction + risk score + IOGP mapping + the RAG-retrieved rule text that justified it
-3. **Human-in-the-loop (30s)** — a low-confidence report routed to review; "AI prioritizes, humans decide"
-4. **Tier 2 (2 min)** — Pattern Intelligence view, click into a pre-seeded pattern's evidence, show the exact contributing reports
-5. **Eval (30s)** — one slide: precision/recall on labeled synthetic data, how many injected patterns Tier 2 caught
-6. **Close (30s)** — from recording incidents to preventing them
-
----
-
-## 12. Risks & Mitigations
-
-| Risk                                               | Mitigation                                                                                                                 |
-| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Gemini returns malformed JSON                      | Strict schema in prompt + retry/repair + Python-side validation before the risk engine sees it                             |
-| Synthetic data doesn't produce convincing patterns | Generator built Day 1, not Day 3 — leaves time to strengthen injected patterns                                             |
-| Clustering surfaces noise, not real patterns       | Deterministic stats gate runs before Gemini cognition — LLM only reasons about groups that already look statistically real |
-| Live demo API failure                              | Recorded fallback run ready by end of Day 2                                                                                |
-| WebSocket/Redis creeping back in                   | Stretch goals only, touched solely if A/B/C finish early                                                                   |
-
----
-
-## 13. Definition of Done
-
-- Tier 1 working end-to-end on live input, with visible rationale and IOGP mapping
-- Tier 2 sweep surfacing at least the injected patterns, with traceable evidence via `pattern_reports`
-- Dashboard, Alerts, Patterns, Submission views all wired to real data
-- One eval slide with real precision/recall numbers
-- Rehearsed demo + recorded fallback
-
----
-
-## Architecture
-
-| Layer    | Technology                          |
-| -------- | ----------------------------------- |
-| Frontend | React + Vite + Tailwind CSS         |
-| Backend  | Python + FastAPI (modular monolith) |
-| Database | PostgreSQL + pgvector               |
-| AI       | Gemini + Embeddings + RAG           |
-
-## Two-Tier System
-
-- **Tier 1** — Real-time individual report analysis: preprocessing → embedding → RAG → Gemini → deterministic risk engine → SIF verdict
-- **Tier 2** — Cognition layer: SQL stats → cosine similarity → connected components → Gemini pattern recognition → HSSE alerts
-
-## Quick Start
-
-### Prerequisites
-
-- Docker & Docker Compose
-- Node.js 18+
-- Python 3.11+
-
-### 1. Start the database
-
-```bash
-docker-compose up -d
+```
+risk_score = barrier_weight + severity_weight + sif_bonus - confidence_penalty
 ```
 
-### 2. Backend
+**Barrier status weights:**
 
-```bash
+| Barrier Status | Weight |
+|---|---|
+| FAILED | +40 |
+| DEGRADED | +20 |
+| UNKNOWN | +10 |
+| INTACT | +0 |
+
+**Severity weights:**
+
+| Severity | Weight |
+|---|---|
+| CRITICAL | +30 |
+| HIGH | +20 |
+| MEDIUM | +10 |
+| LOW | +5 |
+
+**SIF bonus:** +30 if `sif_potential = true`
+
+**Confidence penalty:** If `confidence_score < 0.6`: subtract `(0.6 - confidence) x 20` points (max -12 pts)
+
+**Score capped at [0, 100]**
+
+### Risk Level Thresholds
+
+| Score Range | Risk Level | Action |
+|---|---|---|
+| 80-100 | SIF | Alert created, immediate escalation |
+| 60-79 | HIGH | Alert created, dashboard flagged |
+| 40-59 | REVIEW | Routed to Safety Officer queue |
+| 0-39 | ROUTINE | Stored, no immediate escalation |
+
+### Human Review Routing
+
+A report is sent to REVIEW status (requiring Safety Officer action) if either:
+- `confidence_score < 0.75` (configured via `CONFIDENCE_THRESHOLD`)
+- `requires_followup = true` (AI flagged missing context)
+
+### Gemini Output Fields (Tier 1)
+
+Gemini classifies these fields — **it does NOT set risk level:**
+
+| Field | Description |
+|---|---|
+| `sif_potential` | Boolean — does this meet the three-factor SIF test? |
+| `confidence_score` | 0.0-1.0 — how certain is the classification? |
+| `hazard` | Specific hazard type |
+| `energy_source` | Energy type and magnitude |
+| `activity` | What the worker was doing |
+| `barrier` | The safety control that should have prevented harm |
+| `barrier_status` | INTACT / DEGRADED / FAILED / UNKNOWN |
+| `severity` | LOW / MEDIUM / HIGH / CRITICAL |
+| `life_saving_rules` | Which of the 9 IOGP Life-Saving Rules apply |
+| `rationale` | 1-3 sentence explanation citing specific report evidence |
+| `requires_followup` | True if information is insufficient to classify confidently |
+| `followup_question` | The specific question a Safety Officer should ask |
+
+---
+
+## Tier 2 — Historical Pattern Sweep
+
+**Triggered:** `POST /api/v1/patterns/sweep` (on-demand button in dashboard)
+**Goal:** Find recurring safety patterns across many stored reports — things no single report reveals alone.
+
+### Pipeline (Phases B-F)
+
+```
+Phase B: Deterministic Counting (SQL)
+    SELECT asset_id, COUNT(*) FROM reports
+    WHERE created_at >= NOW() - INTERVAL '30 days'
+    GROUP BY asset_id HAVING COUNT(*) >= 3
+    -> Candidate asset/location shortlist
+
+Phase C: Semantic Clustering (NumPy cosine similarity)
+    For each candidate:
+    1. Pull stored embeddings from report_embeddings
+    2. Compute pairwise cosine similarity matrix
+    3. Greedy single-linkage clustering at similarity >= 0.80
+    -> Clusters of semantically related reports
+
+Phase D: Gemini Multi-Report Reasoning
+    For each cluster: build prompt with ALL report texts + counts
+    + 3 few-shot examples (RECURRING / EMERGING / SYSTEMIC)
+    -> GeminiPatternOutput: pattern_type, hazard, ai_priority,
+                            conclusion, evidence[], confidence
+
+Phase E: Rules Engine Cross-Check (deterministic gate)
+    final_priority = _apply_rules_engine(ai_priority, count_30d, count_7d)
+    -> Final priority NEVER set by AI alone
+
+Phase F: Persistence
+    Save Pattern + PatternReport join rows to DB
+    (traceability: every pattern links to contributing report IDs)
+```
+
+### Cosine Similarity Formula
+
+```
+similarity(a, b) = (a . b) / (||a|| x ||b||)
+```
+
+Computed in pure NumPy over 3072-dimensional Gemini embedding vectors.
+
+**Single-linkage clustering:** A report joins a cluster if its cosine similarity to **any existing cluster member** >= `COGNITION_SIMILARITY_THRESHOLD` (default: 0.80).
+
+This catches "oil dripping" and "hydrocarbon accumulation" as the same issue — even with completely different wording.
+
+### Tier 2 Rules Engine (Phase E)
+
+The AI's `ai_priority` is **never used directly**. It is cross-checked:
+
+| Condition | Final Priority |
+|---|---|
+| AI says HIGH/CRITICAL AND 7-day count >= 2 (accelerating) | CRITICAL |
+| AI says HIGH/CRITICAL OR 30-day count >= 5 (frequent) | HIGH |
+| AI says MEDIUM OR 30-day count >= 3 (threshold) | MEDIUM |
+| Otherwise | LOW |
+
+This double-lock prevents the AI from independently triggering critical alerts.
+
+### Pattern Types
+
+| Type | Meaning |
+|---|---|
+| RECURRING | Same failure mode repeating on same asset |
+| EMERGING | Warning signals escalating in frequency/severity |
+| COMPOUNDING | Multiple separate failures on same asset creating combined SIF risk |
+| SYSTEMIC | Same procedural failure across many assets/locations |
+
+### Gemini Output Fields (Tier 2)
+
+| Field | Description |
+|---|---|
+| `pattern_type` | RECURRING / EMERGING / COMPOUNDING / SYSTEMIC |
+| `hazard` | The shared hazard across the cluster of reports |
+| `ai_priority` | Suggested priority — cross-checked before use |
+| `conclusion` | 2-4 sentence explanation of the pattern |
+| `evidence` | List of 3-5 specific supporting facts from the reports |
+| `confidence` | 0.0-1.0 |
+
+---
+
+## Configuration (backend/.env)
+
+```env
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/precursorai
+GEMINI_API_KEY=your_key_here
+
+# Tier 1 thresholds
+CONFIDENCE_THRESHOLD=0.75         # Below this -> route to REVIEW
+RAG_TOP_K=5                       # Knowledge chunks injected per prompt
+
+# Tier 2 thresholds
+COGNITION_MIN_REPORTS=3           # Min reports on same asset to be a candidate
+COGNITION_SIMILARITY_THRESHOLD=0.80  # Cosine similarity threshold for clustering
+```
+
+---
+
+## API Endpoints
+
+### Reports (Tier 1)
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | /api/v1/reports | Submit report -> triggers full Tier 1 pipeline |
+| GET | /api/v1/reports | List all reports (paginated) |
+| GET | /api/v1/reports/{id} | Full report detail including AI risk assessment |
+
+### Patterns (Tier 2)
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | /api/v1/patterns/sweep | Trigger full Tier 2 sweep (Phases B-F) |
+| GET | /api/v1/patterns | List stored patterns |
+| GET | /api/v1/patterns/{id} | Pattern detail with contributing report IDs |
+
+### Dashboard & Alerts
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | /api/v1/dashboard/summary | Live metrics (polled every 7s) |
+| GET | /api/v1/alerts | List alerts |
+| PATCH | /api/v1/alerts/{id}/read | Mark alert as read |
+
+---
+
+## Running Locally
+
+```powershell
+# Backend
 cd backend
-python -m venv venv
-# Windows: venv\Scripts\activate | Linux/Mac: source venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env   # fill in your keys
-uvicorn app.main:app --reload
-```
+.\venv\Scripts\python.exe -m uvicorn app.main:app --port 8000
 
-### 3. Frontend
-
-```bash
+# Frontend (separate terminal)
 cd frontend
-npm install
 npm run dev
 ```
 
-## API
+- Frontend: http://localhost:5173
+- API Docs: http://localhost:8000/docs
 
-Base URL: `http://localhost:8000/api/v1`
+The database, pgvector extension, all tables, and the 438 RAG knowledge chunks are permanently persisted. No re-setup needed between sessions.
 
-| Method | Endpoint           | Description                            |
-| ------ | ------------------ | -------------------------------------- |
-| POST   | /reports           | Submit a safety report                 |
-| GET    | /reports           | List all reports                       |
-| GET    | /reports/{id}      | Get report details                     |
-| GET    | /dashboard/summary | Dashboard metrics                      |
-| GET    | /alerts            | List alerts                            |
-| PATCH  | /alerts/{id}/read  | Mark alert as read                     |
-| GET    | /patterns          | List detected patterns                 |
-| GET    | /patterns/{id}     | Pattern details + contributing reports |
-| POST   | /cognition/sweep   | Trigger Tier 2 sweep                   |
-| GET    | /cognition/status  | Cognition job status                   |
+---
 
-## Project Structure
+## First-Time Setup
 
+```powershell
+# 1. Install pgvector
+.\install_pgvector.ps1
+
+# 2. Install Python dependencies
+cd backend
+python -m venv venv
+.\venv\Scripts\pip install -r requirements.txt
+
+# 3. Ingest IOGP knowledge base
+.\venv\Scripts\python.exe scripts\ingest_knowledge.py
+
+# 4. (Optional) Seed sample reports
+.\venv\Scripts\python.exe scripts\seed_reports.py
 ```
-precursorai/
-├── frontend/          # React + Vite + Tailwind
-├── backend/           # FastAPI modular monolith
-│   └── app/
-│       ├── api/       # Route handlers
-│       ├── models/    # SQLAlchemy models
-│       ├── schemas/   # Pydantic schemas
-│       ├── services/  # Business orchestration
-│       ├── ai/        # AI modules (Gemini, RAG, embeddings)
-│       └── core/      # Config, database
-├── data/              # Knowledge base & synthetic reports
-└── docs/              # Documentation
-```
+
+---
+
+## Design Principles
+
+1. **AI reasons, Python decides.** Gemini classifies hazards and explains patterns. Risk score, risk level, and final priority are always computed by deterministic Python code.
+
+2. **Double-lock escalation.** A report only becomes CRITICAL or SIF if both the AI assessment AND the deterministic threshold agree.
+
+3. **Full traceability.** Every pattern links back to the exact contributing report IDs and their similarity scores. Every report links to its full AI rationale.
+
+4. **Reuse over rebuild.** Tier 2 reuses the same embedding function and pgvector infrastructure built for Tier 1. No separate vector database.
