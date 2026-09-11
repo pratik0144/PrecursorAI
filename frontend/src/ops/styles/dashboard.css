@@ -1,11 +1,12 @@
 /* ──────────────────────────────────────────
-   DASHBOARD — Petronex monitoring style
+   DASHBOARD — Warm Cream + Amber Glass
    ────────────────────────────────────────── */
 
-/* Status ticker strip at top */
+/* Status ticker */
 .dash-ticker {
-  background-color: #080A0F;
-  border-bottom: 1px solid var(--border-color);
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(180,130,40,0.15);
   padding: 0 2rem;
   height: 32px;
   display: flex;
@@ -23,28 +24,24 @@
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text-main);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
-.dash-ticker-item.online {
-  color: var(--status-success);
-}
-
-.dash-ticker-item.warn {
-  color: var(--amber);
-}
+.dash-ticker-item.online { color: #34D399; }
+.dash-ticker-item.warn   { color: var(--amber-bright); }
 
 .dash-ticker-dot {
   width: 5px; height: 5px;
   border-radius: 50%;
   background-color: currentColor;
+  box-shadow: 0 0 5px currentColor;
   flex-shrink: 0;
 }
 
 .dash-ticker-sep {
-  color: var(--border-color);
+  color: rgba(217,119,6,0.25);
   font-size: 0.9rem;
 }
 
@@ -66,9 +63,9 @@
 
 .dashboard-title {
   font-family: var(--font-head);
-  font-size: 1.6rem;
+  font-size: 1.65rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-data);
   letter-spacing: -0.02em;
 }
 
@@ -84,13 +81,12 @@
   color: var(--text-muted);
   letter-spacing: 0.05em;
   text-align: right;
+  line-height: 1.7;
 }
 
-.dash-timestamp strong {
-  color: var(--amber);
-}
+.dash-timestamp strong { color: var(--amber); }
 
-/* ── Metric Cards ─────────────────────────── */
+/* ── Metric Cards — White Glass ───────────── */
 .metrics-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -98,36 +94,62 @@
 }
 
 .metric-card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 1.25rem 1.25rem 1.25rem 1.5rem;
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.90);
+  border-radius: 18px;
+  padding: 1.35rem 1.35rem 1.25rem 1.6rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   position: relative;
   overflow: hidden;
-  transition: border-color 0.25s, background-color 0.25s;
+  transition: all 0.3s;
+  box-shadow:
+    0 4px 20px rgba(180,120,30,0.10),
+    0 1px 3px rgba(180,120,30,0.07),
+    inset 0 1px 0 rgba(255,255,255,1);
 }
 
 .metric-card:hover {
-  border-color: #2E3548;
-  background-color: var(--bg-card-hover);
+  background: rgba(255,255,255,0.88);
+  box-shadow:
+    0 10px 36px rgba(180,120,30,0.16),
+    0 2px 6px rgba(180,120,30,0.08),
+    inset 0 1px 0 rgba(255,255,255,1);
+  transform: translateY(-3px);
 }
 
-/* Left accent bar */
+/* Top coloured strip */
 .metric-card::before {
   content: '';
   position: absolute;
-  top: 0; bottom: 0; left: 0;
-  width: 3px;
-  border-radius: 10px 0 0 10px;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 18px 18px 0 0;
 }
 
-.metric-card.blue::before   { background-color: #3B82F6; }
-.metric-card.green::before  { background-color: #10B981; }
-.metric-card.orange::before { background-color: var(--amber); }
-.metric-card.red::before    { background-color: #EF4444; }
+/* Bottom-left ambient glow */
+.metric-card::after {
+  content: '';
+  position: absolute;
+  bottom: -24px; left: -24px;
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+.metric-card.blue::before   { background: linear-gradient(to right, #2563EB, transparent); }
+.metric-card.green::before  { background: linear-gradient(to right, #059669, transparent); }
+.metric-card.orange::before { background: linear-gradient(to right, #D97706, transparent); }
+.metric-card.red::before    { background: linear-gradient(to right, #DC2626, transparent); }
+
+.metric-card.blue::after    { background: #2563EB; }
+.metric-card.green::after   { background: #059669; }
+.metric-card.orange::after  { background: #D97706; }
+.metric-card.red::after     { background: #DC2626; }
 
 .metric-card-top {
   display: flex;
@@ -136,23 +158,25 @@
 }
 
 .metric-icon {
-  width: 36px; height: 36px;
-  border-radius: 8px;
+  width: 38px; height: 38px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.9);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-.metric-icon.blue   { background-color: rgba(59,130,246,0.12); color: #60A5FA; }
-.metric-icon.green  { background-color: rgba(16,185,129,0.12); color: #34D399; }
-.metric-icon.orange { background-color: var(--amber-dim); color: var(--amber); }
-.metric-icon.red    { background-color: rgba(239,68,68,0.12); color: #F87171; }
+.metric-icon.blue   { background: rgba(37,99,235,0.10); color: #2563EB; }
+.metric-icon.green  { background: rgba(5,150,105,0.10); color: #059669; }
+.metric-icon.orange { background: rgba(217,119,6,0.12); color: #D97706; }
+.metric-icon.red    { background: rgba(220,38,38,0.10); color: #DC2626; }
 
 .metric-label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.07em;
+  font-size: 0.70rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-label);
   font-family: var(--font-mono);
@@ -160,16 +184,16 @@
 
 .metric-value {
   font-family: var(--font-head);
-  font-size: 2.4rem;
+  font-size: 2.5rem;
   font-weight: 700;
   color: var(--text-data);
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 .metric-sub {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.64rem;
   color: var(--text-muted);
   letter-spacing: 0.04em;
 }
@@ -181,19 +205,12 @@
   gap: 1.25rem;
 }
 
-.panel {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 1.5rem;
-}
-
 .panel-title {
   font-family: var(--font-head);
   font-size: 0.9rem;
-  font-weight: 600;
-  color: #fff;
-  margin: 0 0 1.25rem 0;
+  font-weight: 700;
+  color: var(--text-data);
+  margin: 0 0 1.25rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -202,44 +219,44 @@
 .panel-title::before {
   content: '';
   display: inline-block;
-  width: 3px;
-  height: 14px;
-  background: var(--amber);
+  width: 3px; height: 14px;
+  background: linear-gradient(to bottom, #D97706, rgba(217,119,6,0.25));
   border-radius: 2px;
+  box-shadow: 0 0 5px rgba(217,119,6,0.35);
 }
 
-/* List items inside panels */
 .list-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0.65rem 0;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid rgba(180,130,40,0.08);
 }
 
 .list-item:last-child { border-bottom: none; }
 
-.list-label {
-  font-size: 0.82rem;
-  color: var(--text-main);
-}
+.list-label { font-size: 0.82rem; color: var(--text-main); }
 
 .list-value {
   font-family: var(--font-mono);
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 700;
   color: var(--amber);
-  background-color: var(--amber-dim);
-  border: 1px solid var(--border-amber);
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
+  background: rgba(217,119,6,0.09);
+  border: 1px solid rgba(217,119,6,0.22);
+  padding: 0.2rem 0.55rem;
+  border-radius: 5px;
 }
 
 /* ── Intelligence Banner ─────────────────── */
 .intelligence-banner {
-  background: linear-gradient(135deg, rgba(109, 40, 217, 0.18) 0%, var(--bg-card) 60%);
-  border: 1px solid rgba(109, 40, 217, 0.25);
-  border-radius: 10px;
+  background: linear-gradient(135deg,
+    rgba(109,40,217,0.08) 0%,
+    rgba(255,255,255,0.65) 60%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(109,40,217,0.18);
+  border-radius: 16px;
   padding: 1.5rem 1.75rem;
   display: flex;
   align-items: center;
@@ -247,6 +264,9 @@
   gap: 1.5rem;
   position: relative;
   overflow: hidden;
+  box-shadow:
+    0 4px 24px rgba(109,40,217,0.10),
+    inset 0 1px 0 rgba(255,255,255,1);
 }
 
 .intelligence-banner::before {
@@ -254,7 +274,7 @@
   position: absolute;
   top: 0; left: 0; bottom: 0;
   width: 3px;
-  background: linear-gradient(to bottom, #7C3AED, #4F46E5);
+  background: linear-gradient(to bottom, #8B5CF6, rgba(109,40,217,0.25));
 }
 
 .intelligence-banner-left {
@@ -264,11 +284,11 @@
 }
 
 .intelligence-banner-icon {
-  background-color: rgba(109, 40, 217, 0.15);
-  border: 1px solid rgba(109, 40, 217, 0.25);
+  background: rgba(109,40,217,0.10);
+  border: 1px solid rgba(109,40,217,0.20);
   padding: 0.75rem;
-  border-radius: 10px;
-  color: #A78BFA;
+  border-radius: 12px;
+  color: #7C3AED;
   display: flex;
   flex-shrink: 0;
 }
@@ -277,7 +297,7 @@
   font-family: var(--font-head);
   font-size: 1rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-data);
   margin: 0;
 }
 

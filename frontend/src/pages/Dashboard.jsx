@@ -10,6 +10,7 @@ import { getDashboardSummary } from '../services/api'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts'
 import { Link } from 'react-router-dom'
 import { ShieldAlert, FileText, Activity, AlertTriangle, BrainCircuit, ArrowRight } from 'lucide-react'
+import heroImage from '../assets/image1.png'
 import '../ops/styles/dashboard.css'
 
 const RISK_COLORS = {
@@ -72,6 +73,19 @@ export default function Dashboard() {
 
   return (
     <>
+      <div className="page-hero" style={{ height: '220px' }}>
+        <img src={heroImage} alt="" className="page-hero-img" />
+        <div className="page-hero-overlay" />
+        <div className="page-hero-content">
+          <div className="page-hero-label">HSE Operations</div>
+          <div className="page-hero-title">Command Center</div>
+          <div className="page-hero-subtitle">Live overview of HSE intelligence and risk distribution.</div>
+        </div>
+        <div className="page-hero-action" style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--text-main)', letterSpacing: '0.05em' }}>
+          <strong style={{ color: 'var(--amber-deep)' }}>{timeStr}</strong><br />{dateStr}
+        </div>
+      </div>
+
       {/* Status ticker strip */}
       <div className="dash-ticker">
         <span className="dash-ticker-item online">
@@ -95,18 +109,6 @@ export default function Dashboard() {
       </div>
 
       <div className="dashboard-wrap">
-        {/* Header */}
-        <div className="dashboard-header">
-          <div>
-            <div className="dashboard-title">Command Center</div>
-            <div className="dashboard-subtitle">Live overview of HSE intelligence and risk distribution.</div>
-          </div>
-          <div className="dash-timestamp">
-            <strong>{timeStr}</strong>
-            <br />{dateStr}
-          </div>
-        </div>
-
         {/* Metric cards */}
         <div className="metrics-row">
           <div className="metric-card blue">

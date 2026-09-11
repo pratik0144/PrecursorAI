@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { listReports, submitReport } from '../services/api'
 import { Activity, Plus, ChevronRight, AlertTriangle, Info } from 'lucide-react'
-import oilRigHero from '../assets/oil_rig_hero.png'
+import heroImage from '../assets/image1.png'
 import '../ops/styles/reports.css'
 
 const REPORT_TYPES = ['UNSAFE_ACT', 'UNSAFE_CONDITION', 'NEAR_MISS']
@@ -21,11 +21,10 @@ const TYPE_ICON = {
   NEAR_MISS:        <AlertTriangle size={14} className="type-icon" />,
 }
 
-export default function Reports() {
+export default function Reports({ role }) {
   const [reports, setReports]       = useState([])
-  const [loading, setLoading]       = useState(true)
+  const [loading, setLoading]       = useState(role === 'ADMIN')
   const [submitting, setSubmitting] = useState(false)
-  const [showForm, setShowForm]     = useState(false)
   const [form, setForm]             = useState({
     report_type: 'NEAR_MISS',
     report_text: '',
@@ -34,17 +33,20 @@ export default function Reports() {
   })
 
   useEffect(() => {
-    listReports().then((r) => setReports(r.data)).finally(() => setLoading(false))
-  }, [])
+    if (role === 'ADMIN') {
+      listReports().then((r) => setReports(r.data)).finally(() => setLoading(false))
+    }
+  }, [role])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setSubmitting(true)
     try {
-      const res = await submitReport(form)
-      setReports((prev) => [res.data, ...prev])
+      await submitReport(form)
       setForm({ report_type: 'NEAR_MISS', report_text: '', location: '', asset_id: '' })
-      setShowForm(false)
+      alert("Report successfully submitted to the AI analysis queue.")
+    } catch (err) {
+      alert("Failed to submit report. Backend may be offline.")
     } finally {
       setSubmitting(false)
     }
@@ -54,24 +56,20 @@ export default function Reports() {
     <div className="reports-page-wrap">
       {/* Hero banner */}
       <div className="page-hero">
-        <img src={oilRigHero} alt="" className="page-hero-img" />
+        <img src={heroImage} alt="" className="page-hero-img" />
         <div className="page-hero-overlay" />
         <div className="page-hero-content">
           <div className="page-hero-label">Operations Intelligence</div>
-          <div className="page-hero-title">Reports Log</div>
-          <div className="page-hero-subtitle">Review AI-analyzed HSE safety reports from all assets.</div>
-        </div>
-        <div className="page-hero-action">
-          <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
-            <Plus size={15} />
-            New Report
-          </button>
+          <div className="page-hero-title">{role === 'USER' ? 'File a Safety Report' : 'Reports Log'}</div>
+          <div className="page-hero-subtitle">
+            {role === 'USER' ? 'Submit an HSE safety report to the AI processing queue.' : 'Review AI-analyzed HSE safety reports from all assets.'}
+          </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="reports-content">
-        {showForm && (
+        {role === 'USER' && (
           <div className="report-form-panel">
             <h2>Submit Safety Report</h2>
             <form onSubmit={handleSubmit}>
@@ -119,7 +117,6 @@ export default function Reports() {
                 />
               </div>
               <div className="form-actions">
-                <button type="button" className="btn-cancel" onClick={() => setShowForm(false)}>Cancel</button>
                 <button type="submit" className="btn-primary" disabled={submitting}>
                   {submitting ? <><Activity size={14} className="spin" /> Analyzing...</> : 'Submit to AI'}
                 </button>
@@ -128,12 +125,13 @@ export default function Reports() {
           </div>
         )}
 
-        {loading ? (
-          <div className="loading-screen" style={{ minHeight: '40vh' }}>
-            <Activity size={24} className="spin" style={{ color: '#F59E0B' }} />
-            <span>LOADING REPORTS...</span>
-          </div>
-        ) : (
+        {role === 'ADMIN' && (
+          loading ? (
+            <div className="loading-screen" style={{ minHeight: '40vh' }}>
+              <Activity size={24} className="spin" style={{ color: '#F59E0B' }} />
+              <span>LOADING REPORTS...</span>
+            </div>
+          ) : (
           <div className="reports-table-container">
             <table className="reports-table">
               <thead>
@@ -185,7 +183,7 @@ export default function Reports() {
               </tbody>
             </table>
           </div>
-        )}
+        ))}
       </div>
     </div>
   )

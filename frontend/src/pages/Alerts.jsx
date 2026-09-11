@@ -6,7 +6,7 @@ import { useCallback, useState } from 'react'
 import { usePolling } from '../hooks/usePolling'
 import { listAlerts, markAlertRead } from '../services/api'
 import { ShieldAlert, AlertTriangle, Info, Check, Activity, Clock } from 'lucide-react'
-import refineryHero from '../assets/refinery_hero.png'
+import heroImage from '../assets/image1.png'
 import '../ops/styles/intelligence.css'
 
 const SEVERITY_CARD_CLASS = {
@@ -59,10 +59,10 @@ export default function Alerts() {
     <div className="alerts-page-wrap">
       {/* Hero */}
       <div className="page-hero">
-        <img src={refineryHero} alt="" className="page-hero-img" />
+        <img src={heroImage} alt="" className="page-hero-img" />
         <div className="page-hero-overlay" />
         <div className="page-hero-content">
-          <div className="page-hero-label">SIF Detection System</div>
+          <div className="page-hero-label red">SIF Detection System</div>
           <div className="page-hero-title" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             Active Alerts
             {unreadCount > 0 && <span className="badge-alert">{unreadCount}</span>}

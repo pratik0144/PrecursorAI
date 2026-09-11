@@ -1,5 +1,5 @@
 /* ──────────────────────────────────────────
-   REPORTS PAGE — Petrova editorial style
+   REPORTS PAGE — Warm Cream Glass style
    ────────────────────────────────────────── */
 .reports-page-wrap {
   display: flex;
@@ -14,12 +14,18 @@
   width: 100%;
 }
 
-/* ── Table container ──────────────────────── */
+/* ── Table container — white glass ────────── */
 .reports-table-container {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.90);
+  border-radius: 16px;
   overflow: hidden;
+  box-shadow:
+    0 4px 20px rgba(180,120,30,0.10),
+    0 1px 3px rgba(180,120,30,0.07),
+    inset 0 1px 0 rgba(255,255,255,1);
 }
 
 .reports-table {
@@ -30,38 +36,33 @@
 .reports-table th {
   text-align: left;
   padding: 0.875rem 1.5rem;
-  color: var(--text-muted);
+  color: var(--text-label);
   font-size: 0.65rem;
   font-weight: 700;
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  border-bottom: 1px solid var(--border-color);
-  background-color: #080A0F;
+  border-bottom: 1px solid rgba(180,130,40,0.12);
+  background: rgba(255,255,255,0.40);
 }
 
 .reports-table td {
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid rgba(180,130,40,0.08);
   font-size: 0.875rem;
   color: var(--text-main);
   vertical-align: middle;
 }
 
-.reports-table tbody tr {
-  transition: background-color 0.15s;
-}
+.reports-table tbody tr { transition: background-color 0.15s; }
 
 .reports-table tbody tr:hover td {
-  background-color: rgba(245, 158, 11, 0.04);
+  background: rgba(217,119,6,0.06);
   cursor: pointer;
 }
 
-.reports-table tbody tr:last-child td {
-  border-bottom: none;
-}
+.reports-table tbody tr:last-child td { border-bottom: none; }
 
-/* Type cell */
 .type-cell {
   display: flex;
   align-items: center;
@@ -76,7 +77,6 @@
 
 .type-icon { color: var(--amber); }
 
-/* Asset cell */
 .asset-main {
   display: block;
   font-weight: 600;
@@ -87,38 +87,44 @@
 .asset-sub {
   display: block;
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-family: var(--font-mono);
   margin-top: 0.1rem;
 }
 
-/* Chevron */
 .chevron-icon {
-  color: var(--text-muted);
+  color: rgba(180,130,40,0.3);
   transition: color 0.15s, transform 0.15s;
 }
 
 .reports-table tbody tr:hover .chevron-icon {
   color: var(--amber);
-  transform: translateX(2px);
+  transform: translateX(3px);
+  filter: drop-shadow(0 0 4px rgba(217,119,6,0.3));
 }
 
-/* ── New Report Form ───────────────────────── */
+/* ── New Report Form — white glass ────────── */
 .report-form-panel {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-top: 2px solid var(--amber);
-  border-radius: 10px;
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.95);
+  border-top: 3px solid rgba(217,119,6,0.6);
+  border-radius: 16px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
+  box-shadow:
+    0 8px 30px rgba(180,120,30,0.12),
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 20px rgba(217,119,6,0.08);
 }
 
 .report-form-panel h2 {
   font-family: var(--font-head);
   font-size: 1rem;
   font-weight: 700;
-  color: #fff;
-  margin: 0 0 1.25rem 0;
+  color: var(--text-data);
+  margin: 0 0 1.25rem;
 }
 
 .form-grid {
@@ -142,23 +148,27 @@
 .form-input,
 .form-textarea {
   width: 100%;
-  padding: 0.6rem 0.85rem;
-  background-color: var(--bg-main);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
+  padding: 0.6rem 0.875rem;
+  background: rgba(255,255,255,0.60);
+  border: 1px solid rgba(180,130,40,0.20);
+  border-radius: 8px;
   color: var(--text-data);
   font-size: 0.875rem;
   font-family: var(--font-body);
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  box-sizing: border-box;
+  transition: all 0.2s;
+  backdrop-filter: blur(4px);
 }
 
 .form-input:focus,
 .form-textarea:focus {
-  border-color: var(--amber);
-  box-shadow: 0 0 0 3px var(--amber-glow);
+  border-color: rgba(217,119,6,0.5);
+  box-shadow: 0 0 0 3px rgba(217,119,6,0.12), 0 0 12px rgba(217,119,6,0.08);
+  background: rgba(255,255,255,0.85);
 }
+
+.form-input::placeholder,
+.form-textarea::placeholder { color: var(--text-muted); }
 
 .form-textarea { resize: none; }
 
@@ -168,7 +178,7 @@
   gap: 0.75rem;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid rgba(180,130,40,0.12);
 }
 
 .btn-cancel {

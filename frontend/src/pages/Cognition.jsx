@@ -14,7 +14,7 @@ import {
   RefreshCw, ExternalLink, AlertTriangle,
   Layers, ShieldAlert, Filter, Activity, Search
 } from 'lucide-react'
-import controlRoomHero from '../assets/oil_rig_hero.png'
+import heroImage from '../assets/image1.png'
 import '../ops/styles/intelligence.css'
 
 const PRIORITY_STYLE = {
@@ -120,7 +120,7 @@ export default function Cognition() {
     <div className="cognition-page-wrap">
       {/* Hero */}
       <div className="page-hero">
-        <img src={controlRoomHero} alt="" className="page-hero-img" />
+        <img src={heroImage} alt="" className="page-hero-img" />
         <div className="page-hero-overlay" />
         <div className="page-hero-content">
           <div className="page-hero-label">Tier 2 Analysis</div>
