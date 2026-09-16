@@ -10,7 +10,7 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set) => ({
-  theme: 'dark',
+  theme: 'light',
   sidebarOpen: true,
   selectedLocation: null,
   setTheme: (theme) => set({ theme }),

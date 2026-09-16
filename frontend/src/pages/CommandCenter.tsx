@@ -16,7 +16,7 @@ export default function CommandCenter() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-black text-white p-4 space-y-4">
+    <div className="flex flex-col h-full bg-background text-foreground p-4 space-y-4">
       <DemoDataMarker />
       <div className="grid grid-cols-6 gap-4">
         <KpiCard label="Total Reports" value={data.kpis.total_reports} />
@@ -32,9 +32,9 @@ export default function CommandCenter() {
           <LiveTriageFeed items={data.recent_reports} />
         </div>
         <div className="w-[400px] space-y-4 flex flex-col">
-          <div className="h-64 bg-gray-900 border border-gray-800 flex items-center justify-center">[Mini-Globe Preview - links to /globe]</div>
+          <div className="h-64 bg-surface-1 border border-border shadow-sm flex items-center justify-center">[Mini-Globe Preview - links to /globe]</div>
           <div className="flex-1 overflow-y-auto">
-            <h3 className="text-gray-400 mb-2 font-mono">Top Emerging Patterns</h3>
+            <h3 className="text-foreground-muted mb-2 font-mono">Top Emerging Patterns</h3>
             {data.patterns.map(p => <PatternCard key={p.id} pattern={p} />)}
           </div>
         </div>

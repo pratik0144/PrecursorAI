@@ -1,55 +1,55 @@
 @import "tailwindcss";
 
 /* ── PrecursorAI Design Tokens ──────────────────────────────────────── */
-/* Command-center dark theme — Tailwind v4 compatible                   */
+/* Light-mode command-center theme — clean, professional, high-contrast */
 
 @theme {
-  /* Background surfaces (layered elevation) */
-  --color-background: #0A0E14;
-  --color-surface-1: #111722;
-  --color-surface-2: #161E2B;
-  --color-surface-3: #1C2636;
+  /* Background surfaces (layered elevation — light) */
+  --color-background: #F8FAFC;
+  --color-surface-1: #FFFFFF;
+  --color-surface-2: #F1F5F9;
+  --color-surface-3: #E2E8F0;
 
   /* Foreground / text */
-  --color-foreground: #E2E8F0;
-  --color-foreground-muted: #94A3B8;
-  --color-foreground-dim: #64748B;
+  --color-foreground: #0F172A;
+  --color-foreground-muted: #64748B;
+  --color-foreground-dim: #94A3B8;
 
   /* Accent / interactive */
-  --color-accent: #22D3EE;
-  --color-accent-hover: #06B6D4;
+  --color-accent: #0891B2;
+  --color-accent-hover: #0E7490;
 
-  /* Escalation scale (colorblind-safe) */
-  --color-routine: #2DD4BF;
-  --color-review: #FBBF24;
-  --color-high: #F97316;
-  --color-critical: #EF4444;
-  --color-sif: #DC2626;
+  /* Escalation scale (colorblind-safe — same semantic colors) */
+  --color-routine: #0D9488;
+  --color-review: #D97706;
+  --color-high: #EA580C;
+  --color-critical: #DC2626;
+  --color-sif: #B91C1C;
 
-  /* Semantic */
-  --color-border: #1E293B;
-  --color-input: #1E293B;
-  --color-ring: #22D3EE;
-  --color-card: #111722;
-  --color-card-foreground: #E2E8F0;
-  --color-popover: #111722;
-  --color-popover-foreground: #E2E8F0;
-  --color-primary: #22D3EE;
-  --color-primary-foreground: #0A0E14;
-  --color-secondary: #1E293B;
-  --color-secondary-foreground: #E2E8F0;
-  --color-muted: #1E293B;
-  --color-muted-foreground: #94A3B8;
-  --color-destructive: #EF4444;
-  --color-destructive-foreground: #FAFAFA;
+  /* Semantic UI tokens */
+  --color-border: #E2E8F0;
+  --color-input: #E2E8F0;
+  --color-ring: #0891B2;
+  --color-card: #FFFFFF;
+  --color-card-foreground: #0F172A;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #0F172A;
+  --color-primary: #0891B2;
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: #F1F5F9;
+  --color-secondary-foreground: #0F172A;
+  --color-muted: #F1F5F9;
+  --color-muted-foreground: #64748B;
+  --color-destructive: #DC2626;
+  --color-destructive-foreground: #FFFFFF;
 
   /* Barrier status colors */
-  --color-barrier-intact: #10B981;
-  --color-barrier-degraded: #F59E0B;
-  --color-barrier-missing: #EF4444;
-  --color-barrier-bypassed: #F43F5E;
-  --color-barrier-failed: #DC2626;
-  --color-barrier-unknown: #6B7280;
+  --color-barrier-intact: #059669;
+  --color-barrier-degraded: #D97706;
+  --color-barrier-missing: #DC2626;
+  --color-barrier-bypassed: #E11D48;
+  --color-barrier-failed: #B91C1C;
+  --color-barrier-unknown: #9CA3AF;
 
   /* Radius */
   --radius-sm: 0.25rem;
@@ -79,13 +79,13 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Scrollbar styling for dark theme */
+/* Scrollbar styling for light theme */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-background);
+  background: var(--color-surface-2);
 }
 ::-webkit-scrollbar-thumb {
   background: var(--color-surface-3);
@@ -93,4 +93,9 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-foreground-dim);
+}
+
+/* Light-mode shadow utility for elevation */
+.shadow-elevation {
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
 }

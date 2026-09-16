@@ -13,7 +13,7 @@ import { AuditTimeline } from '../components/domain/AuditTimeline';
 
 export default function ReportDetail() {
   return (
-    <div className="p-4 bg-black text-white min-h-screen">
+    <div className="p-4 bg-background text-foreground min-h-screen">
       <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-800">
         <div className="flex items-center space-x-4 font-mono">
           <span className="text-xl font-bold">REP-2026-0941</span>
@@ -24,10 +24,10 @@ export default function ReportDetail() {
       </div>
       <div className="grid grid-cols-3 gap-6">
         <div className="border border-gray-800 p-4">
-          <h2 className="text-gray-500 font-mono mb-4">RAW REPORT</h2>
+          <h2 className="text-foreground-muted font-mono mb-4">RAW REPORT</h2>
           <p className="text-sm text-gray-300">Scaffolding near the flare stack collapsed while operators were working underneath. No injuries reported but high potential for fatal incident.</p>
         </div>
-        <div className="border border-blue-900/50 p-4 bg-blue-950/10">
+        <div className="border border-blue-200 p-4 bg-blue-50">
           <h2 className="text-blue-400 font-mono mb-4 text-xs">AI EXTRACTION — reasoning, not decision</h2>
           <EnergyWheel activeSegments={['GRAVITY', 'KINETIC']} />
           <div className="mt-4 flex flex-col space-y-2">
@@ -35,7 +35,7 @@ export default function ReportDetail() {
             <LsrChip rule="Working at Height" />
           </div>
         </div>
-        <div className="border border-orange-900/50 p-4 bg-orange-950/10">
+        <div className="border border-orange-200 p-4 bg-orange-50">
           <h2 className="text-orange-400 font-mono mb-4 text-xs">DETERMINISTIC ENGINE — this set the outcome</h2>
           <ThreeFactorGate highEnergy={true} personInDangerZone={true} barrierCompromised={true} />
           <div className="mt-6 flex flex-col space-y-4">

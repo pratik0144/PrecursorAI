@@ -3,12 +3,12 @@ import { cn } from '@/lib/utils';
 
 export const BarrierStatusPill = ({ status, label }: { status: string, label: string }) => {
   const colors: Record<string, string> = {
-    INTACT: "bg-emerald-950 text-emerald-400 border-emerald-500/50",
-    DEGRADED: "bg-amber-950 text-amber-400 border-amber-500/50",
-    MISSING: "bg-red-950 text-red-400 border-red-500/50",
-    BYPASSED: "bg-rose-950 text-rose-400 border-rose-500/50",
-    FAILED: "bg-red-950 text-red-500 border-red-500",
-    UNKNOWN: "bg-gray-900 text-gray-400 border-gray-700"
+    INTACT: "bg-emerald-50 text-emerald-700 border-emerald-300",
+    DEGRADED: "bg-amber-50 text-amber-700 border-amber-300",
+    MISSING: "bg-red-50 text-red-700 border-red-300",
+    BYPASSED: "bg-rose-50 text-rose-700 border-rose-300",
+    FAILED: "bg-red-100 text-red-800 border-red-400",
+    UNKNOWN: "bg-surface-2 text-foreground-dim border-border"
   };
   return (
     <span className={cn("px-2 py-1 text-[10px] uppercase font-mono border rounded-full inline-flex items-center", colors[status] || colors.UNKNOWN)}>

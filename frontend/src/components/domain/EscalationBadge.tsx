@@ -9,10 +9,10 @@ interface EscalationBadgeProps {
 }
 
 const colorMap: Record<EscalationLevel, string> = {
-  ROUTINE: 'bg-teal-950 text-teal-400 border-teal-500/50',
-  REVIEW: 'bg-amber-950 text-amber-400 border-amber-500/50',
-  HIGH: 'bg-orange-950 text-orange-400 border-orange-500/50',
-  CRITICAL: 'bg-red-950 text-red-400 border-red-500/50',
+  ROUTINE: 'bg-teal-50 text-teal-700 border-teal-300',
+  REVIEW: 'bg-amber-50 text-amber-700 border-amber-300',
+  HIGH: 'bg-orange-50 text-orange-700 border-orange-300',
+  CRITICAL: 'bg-red-50 text-red-700 border-red-400',
 };
 
 export const EscalationBadge: React.FC<EscalationBadgeProps> = ({ level, className }) => {

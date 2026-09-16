@@ -18,11 +18,9 @@ export default function CommandBar() {
       </div>
       
       <div className="flex items-center gap-4">
-        {__USE_MOCKS__ && (
-          <span className="px-2 py-1 text-xs font-bold bg-amber-500/20 text-amber-500 rounded-md">
-            MOCK MODE
+        <span className="px-2 py-1 text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-300 rounded-md">
+            DEMO DATA
           </span>
-        )}
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <input 

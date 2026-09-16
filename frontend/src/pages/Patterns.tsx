@@ -3,9 +3,9 @@ import { PatternCard } from '../components/domain/PatternCard';
 
 export default function Patterns() {
   return (
-    <div className="p-6 bg-black min-h-screen text-white">
+    <div className="p-6 bg-background min-h-screen text-foreground">
       <h1 className="text-2xl font-mono mb-6">Patterns Intelligence</h1>
-      <div className="mb-8 p-12 border border-gray-800 flex items-center justify-center text-gray-500 rounded bg-gray-900/50">
+      <div className="mb-8 p-12 border border-border flex items-center justify-center text-foreground-muted rounded bg-surface-2">
         Semantic Cluster Visualization — Coming Soon
       </div>
       {['RECURRING', 'EMERGING', 'COMPOUNDING', 'SYSTEMIC'].map(type => (

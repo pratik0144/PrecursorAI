@@ -21,7 +21,7 @@ export const SifFunnel: React.FC<SifFunnelProps> = ({ total, highEnergy, sifPote
       <div className="w-3/5 bg-orange-900/30 border border-orange-500/50 p-2 text-center text-orange-400">
         SIF POTENTIAL: {sifPotential}
       </div>
-      <div className="w-2/5 bg-red-900/30 border border-red-500/50 p-2 text-center text-red-400">
+      <div className="w-2/5 bg-red-50 border border-red-300 p-2 text-center text-red-700">
         ESCALATED: {escalated}
       </div>
     </div>

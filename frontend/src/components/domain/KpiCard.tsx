@@ -10,15 +10,15 @@ interface KpiCardProps {
 
 export const KpiCard: React.FC<KpiCardProps> = ({ label, value, trend, className }) => {
   return (
-    <div className={cn("p-4 border border-gray-800 bg-black rounded-lg flex flex-col relative", className)}>
-      <span className="text-xs text-gray-500 uppercase">{label}</span>
+    <div className={cn("p-4 border border-border bg-surface-1 rounded-lg shadow-sm flex flex-col relative", className)}>
+      <span className="text-xs text-foreground-muted uppercase">{label}</span>
       <div className="flex items-center space-x-2 mt-1">
-        <span className="text-2xl font-mono text-white tabular-nums">{value}</span>
+        <span className="text-2xl font-mono text-foreground tabular-nums">{value}</span>
         {trend === 'up' && <span className="text-green-500">↑</span>}
         {trend === 'down' && <span className="text-red-500">↓</span>}
-        {trend === 'flat' && <span className="text-gray-500">→</span>}
+        {trend === 'flat' && <span className="text-foreground-muted">→</span>}
       </div>
-      <span className="absolute top-2 right-2 text-[10px] text-gray-700 bg-gray-900 px-1 rounded">DEMO</span>
+      <span className="absolute top-2 right-2 text-[10px] text-foreground-muted bg-surface-2 px-1 rounded">DEMO</span>
     </div>
   );
 };

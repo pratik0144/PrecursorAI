@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { RouterProvider, createBrowserRouter } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import AppLayout from './components/layout/AppLayout'
 import React, { Suspense, lazy } from 'react'
 
@@ -30,148 +30,45 @@ const queryClient = new QueryClient({
   },
 })
 
-const LoadingFallback = () => (
-  <div className="flex items-center justify-center h-screen bg-[#0A0E14]">
-    <div className="flex flex-col items-center gap-4">
-      <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
-      <span className="text-sm text-gray-400 font-mono">LOADING…</span>
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center h-screen bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <span className="text-sm text-foreground-muted font-mono">LOADING…</span>
+      </div>
     </div>
-  </div>
-)
+  )
+}
 
-const router = createBrowserRouter([
-  {
-    path: '/login',
-    element: (
-      <Suspense fallback={<LoadingFallback />}>
-        <Login />
-      </Suspense>
-    ),
-  },
-  {
-    path: '/',
-    element: <AppLayout />,
-    children: [
-      {
-        index: true,
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <CommandCenter />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'globe',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <Globe />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'triage',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <Triage />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'reports/:id',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <ReportDetail />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'sif',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <SifAnalysis />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'patterns',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <Patterns />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'patterns/:id',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <PatternDetail />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'assets',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <Assets />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'assets/:id',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <AssetDetail />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'alerts',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <Alerts />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'analytics',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <Analytics />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'submit',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <Submit />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'audit',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <AuditLog />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'settings',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <Settings />
-          </Suspense>
-        ),
-      },
-    ],
-  },
-])
+function PageWrapper({ children }: { children: React.ReactNode }) {
+  return <Suspense fallback={<LoadingFallback />}>{children}</Suspense>
+}
 
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<PageWrapper><Login /></PageWrapper>} />
+          <Route path="/" element={<AppLayout />}>
+            <Route index element={<PageWrapper><CommandCenter /></PageWrapper>} />
+            <Route path="globe" element={<PageWrapper><Globe /></PageWrapper>} />
+            <Route path="triage" element={<PageWrapper><Triage /></PageWrapper>} />
+            <Route path="reports/:id" element={<PageWrapper><ReportDetail /></PageWrapper>} />
+            <Route path="sif" element={<PageWrapper><SifAnalysis /></PageWrapper>} />
+            <Route path="patterns" element={<PageWrapper><Patterns /></PageWrapper>} />
+            <Route path="patterns/:id" element={<PageWrapper><PatternDetail /></PageWrapper>} />
+            <Route path="assets" element={<PageWrapper><Assets /></PageWrapper>} />
+            <Route path="assets/:id" element={<PageWrapper><AssetDetail /></PageWrapper>} />
+            <Route path="alerts" element={<PageWrapper><Alerts /></PageWrapper>} />
+            <Route path="analytics" element={<PageWrapper><Analytics /></PageWrapper>} />
+            <Route path="submit" element={<PageWrapper><Submit /></PageWrapper>} />
+            <Route path="audit" element={<PageWrapper><AuditLog /></PageWrapper>} />
+            <Route path="settings" element={<PageWrapper><Settings /></PageWrapper>} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
     </QueryClientProvider>
   )
 }

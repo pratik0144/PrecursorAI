@@ -1,10 +1,8 @@
 import * as React from "react"
 import { cn } from "../../lib/utils"
 
-const Tabs = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={{ref}} className={{cn("base-class", className)}} {...props} />
-  )
-)
-Tabs.displayName = "Tabs"
-export {{ Tabs }}
+function Tabs({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn(className)} {...props}>{children}</div>
+}
+
+export { Tabs }

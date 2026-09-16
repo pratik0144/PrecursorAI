@@ -1,10 +1,8 @@
 import * as React from "react"
 import { cn } from "../../lib/utils"
 
-const Popover = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={{ref}} className={{cn("base-class", className)}} {...props} />
-  )
-)
-Popover.displayName = "Popover"
-export {{ Popover }}
+function Popover({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn(className)} {...props}>{children}</div>
+}
+
+export { Popover }
