@@ -5,10 +5,10 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Literal, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
-
+from app.schemas.analysis import ExtractionPassA, ExtractionPassB
 
 # ── Request ──────────────────────────────────────────────────────────────────
 
@@ -28,6 +28,16 @@ class AnalysisSummary(BaseModel):
     iogp_rule: Optional[str] = None
 
 
+class ClassificationResult(BaseModel):
+    high_energy_present: bool
+    person_in_danger_zone: bool
+    barrier_compromised: bool
+    sif_classification: str
+    risk_score: int
+    escalation_level: str
+    ruleset_version_id: Optional[uuid.UUID]
+
+
 class ReportAnalysisDetail(BaseModel):
     id: Optional[uuid.UUID] = None
     sif_potential: Optional[bool] = None
@@ -44,9 +54,11 @@ class ReportAnalysisDetail(BaseModel):
     rationale: Optional[str] = None
     requires_followup: Optional[bool] = None
     followup_question: Optional[str] = None
+    pass_a: Optional[ExtractionPassA] = None
+    pass_b: Optional[ExtractionPassB] = None
+    classification: Optional[ClassificationResult] = None
 
     model_config = {"from_attributes": True}
-
 
 
 # ── Responses ────────────────────────────────────────────────────────────────
@@ -68,7 +80,7 @@ class ReportListItem(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class ReportDetail(ReportListItem):
+class ReportDetailResponse(ReportListItem):
     report_text: str
     analysis: Optional[ReportAnalysisDetail] = None
-
+    rag_evidence_chunk_ids: List[str] = Field(default_factory=list)

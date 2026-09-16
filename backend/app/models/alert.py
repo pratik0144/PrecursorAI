@@ -1,27 +1,60 @@
-"""
-models/alert.py — Alert ORM model
-"""
 import uuid
+from datetime import datetime
+from typing import Optional
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, Text, func
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy import text, TIMESTAMP, ForeignKey, Index, CheckConstraint
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
 
 
 class Alert(Base):
     __tablename__ = "alerts"
+    __table_args__ = (
+        Index("ix_alerts_status", "status"),
+        Index("ix_alerts_assignee_id", "assignee_id"),
+        Index("ix_alerts_created_at_desc", text("created_at DESC")),
+        Index("ix_alerts_severity", "severity"),
+        CheckConstraint(
+            "(report_id IS NOT NULL AND pattern_id IS NULL AND source = 'REPORT') OR "
+            "(report_id IS NULL AND pattern_id IS NOT NULL AND source = 'PATTERN')",
+            name="chk_alert_source_consistency"
+        ),
+        {"comment": "Alerts triggered by reports or patterns."},
+    )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    report_id = Column(UUID(as_uuid=True), ForeignKey("reports.id"), nullable=True)
-    pattern_id = Column(UUID(as_uuid=True), ForeignKey("patterns.id"), nullable=True)
-    alert_type = Column(String(50), nullable=False)  # SIF | PATTERN | REVIEW_REQUIRED
-    severity = Column(String(20), nullable=False)  # LOW | MEDIUM | HIGH | CRITICAL
-    title = Column(String(500), nullable=False)
-    message = Column(Text, nullable=False)
-    is_read = Column(Boolean, nullable=False, default=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, server_default=text("gen_random_uuid()"))
+    org_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"))
+    report_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("reports.id", ondelete="CASCADE"))
+    pattern_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("patterns.id", ondelete="CASCADE"))
+    title: Mapped[str] = mapped_column()
+    message: Mapped[str] = mapped_column()
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=text("now()"))
 
-    report = relationship("Report", back_populates="alerts")
-    pattern = relationship("Pattern", back_populates="alerts")
+    # Lifecycle and Routing
+    status: Mapped[str] = mapped_column() # maps to alert_status ENUM
+    severity: Mapped[str] = mapped_column() # maps to severity ENUM
+    source: Mapped[str] = mapped_column() # maps to alert_source ENUM
+    assignee_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    
+    sla_due_at: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP(timezone=True))
+    acknowledged_at: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP(timezone=True))
+    escalated_at: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP(timezone=True))
+    closed_at: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP(timezone=True))
+
+    # Legacy is_read removed or not needed, mapped to status now
+
+
+class AlertEvent(Base):
+    __tablename__ = "alert_events"
+    __table_args__ = (
+        {"comment": "Audit trail of alert lifecycle changes."},
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, server_default=text("gen_random_uuid()"))
+    alert_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("alerts.id", ondelete="CASCADE"))
+    from_status: Mapped[Optional[str]] = mapped_column()
+    to_status: Mapped[str] = mapped_column()
+    actor_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    note: Mapped[Optional[str]] = mapped_column()
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=text("now()"))

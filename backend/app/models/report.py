@@ -1,41 +1,47 @@
-"""
-models/report.py — User and Report ORM models
-"""
 import uuid
+from datetime import datetime
+from typing import Optional
 
-from sqlalchemy import Column, DateTime, ForeignKey, String, Text, func
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy import text, TIMESTAMP, ForeignKey, Index, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
 
 
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String(255), nullable=False)
-    email = Column(String(255), unique=True, nullable=False, index=True)
-    role = Column(String(50), nullable=False, default="worker")
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    reports = relationship("Report", back_populates="submitter")
-
-
 class Report(Base):
     __tablename__ = "reports"
+    __table_args__ = (
+        Index("ix_reports_org_id", "org_id"),
+        Index("ix_reports_created_at_desc", text("created_at DESC")),
+        Index("ix_reports_status", "status"),
+        Index("ix_reports_report_type", "report_type"),
+        Index("ix_reports_asset_uuid", "asset_uuid"),
+        Index("ix_reports_location_id", "location_id"),
+        Index("ix_reports_status_review", "status", postgresql_where=text("status = 'REVIEW'")),
+        {"comment": "Safety reports submitted by personnel."},
+    )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    report_text = Column(Text, nullable=False)
-    report_type = Column(String(50), nullable=False)  # UNSAFE_ACT | UNSAFE_CONDITION | NEAR_MISS
-    asset_id = Column(String(100), nullable=True)
-    location = Column(String(255), nullable=True)
-    submitted_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    status = Column(String(50), nullable=False, default="PENDING")
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, server_default=text("gen_random_uuid()"))
+    org_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"))
+    report_text: Mapped[str] = mapped_column()
+    cleaned_text: Mapped[Optional[str]] = mapped_column()
+    report_type: Mapped[str] = mapped_column() # maps to report_type ENUM
+    
+    # Legacy location and asset tracking
+    location: Mapped[Optional[str]] = mapped_column(String)
+    asset_id: Mapped[Optional[str]] = mapped_column(String)
 
-    submitter = relationship("User", back_populates="reports")
-    analysis = relationship("ReportAnalysis", back_populates="report", uselist=False)
-    embedding = relationship("ReportEmbedding", back_populates="report", uselist=False)
-    pattern_links = relationship("PatternReport", back_populates="report")
-    alerts = relationship("Alert", back_populates="report")
+    # New relational tracking
+    location_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("locations.id", ondelete="SET NULL"))
+    asset_uuid: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("assets.id", ondelete="SET NULL"))
+
+    reporter_name: Mapped[Optional[str]] = mapped_column()
+    reporter_role: Mapped[Optional[str]] = mapped_column()
+    is_synthetic: Mapped[bool] = mapped_column(server_default=text("false"))
+    source: Mapped[Optional[str]] = mapped_column() # manual/batch/api
+
+    status: Mapped[str] = mapped_column(server_default=text("'PENDING'")) # maps to report_status ENUM
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=text("now()"))
+
+    analysis: Mapped[Optional["ReportAnalysis"]] = relationship("ReportAnalysis", back_populates="report", uselist=False)
+    embedding: Mapped[Optional["ReportEmbedding"]] = relationship("ReportEmbedding", back_populates="report", uselist=False)

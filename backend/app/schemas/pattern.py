@@ -68,6 +68,17 @@ class PatternDetail(PatternListItem):
     contributing_reports: List[ContributingReport] = []
 
 
+class SweepRunResponse(BaseModel):
+    id: uuid.UUID
+    status: str
+    run_duration_ms: int
+    clusters_found: int
+    patterns_created: int
+    ruleset_version_id: Optional[uuid.UUID]
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
 # ── Sweep response ────────────────────────────────────────────────────────────
 
 class SweepResult(BaseModel):

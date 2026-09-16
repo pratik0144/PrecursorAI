@@ -165,9 +165,13 @@ async def init_db() -> None:
     Steps:
       1. Create the target database if missing
       2. Enable pgvector extension (warns but does NOT crash if unavailable)
-      3. Create all tables (skips vector tables if pgvector is unavailable)
+      3. Create all tables if USE_CREATE_ALL is True
     """
     await ensure_database_exists()
     await enable_pgvector()
-    await create_tables()
+    
+    if settings.USE_CREATE_ALL:
+        await create_tables()
+    else:
+        print("[bootstrap] Skipping create_all(), using Alembic migrations as source of truth.")
 

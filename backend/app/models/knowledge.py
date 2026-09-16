@@ -1,37 +1,46 @@
-"""
-models/knowledge.py — KnowledgeChunk and KnowledgeEmbedding ORM models
-"""
 import uuid
+from typing import Optional, Any
 
-from sqlalchemy import Column, String, Text, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy import text, ForeignKey, Index
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
 
 from app.core.database import Base
 
-EMBEDDING_DIM = 3072  # gemini-embedding-001 output dimension
-
 
 class KnowledgeChunk(Base):
     __tablename__ = "knowledge_chunks"
+    __table_args__ = (
+        {"comment": "RAG knowledge base chunks."},
+    )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    chunk_id = Column(String(255), unique=True, nullable=False, index=True)
-    title = Column(String(500), nullable=False)
-    chunk_text = Column(Text, nullable=False)
-    source = Column(String(500), nullable=False)  # e.g. "IOGP Life-Saving Rules v4"
-
-    embedding = relationship("KnowledgeEmbedding", back_populates="chunk", uselist=False)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, server_default=text("gen_random_uuid()"))
+    chunk_id: Mapped[str] = mapped_column()
+    title: Mapped[str] = mapped_column()
+    chunk_text: Mapped[str] = mapped_column()
+    source: Mapped[str] = mapped_column()
+    
+    # New fields
+    framework: Mapped[Optional[str]] = mapped_column()
+    section: Mapped[Optional[str]] = mapped_column()
+    token_count: Mapped[Optional[int]] = mapped_column()
 
 
 class KnowledgeEmbedding(Base):
     __tablename__ = "knowledge_embeddings"
+    __table_args__ = (
+        Index(
+            "ix_knowledge_embeddings_embedding",
+            "embedding",
+            postgresql_using="hnsw",
+            postgresql_with={"m": 16, "ef_construction": 64},
+            postgresql_ops={"embedding": "vector_cosine_ops"},
+        ),
+        {"comment": "Vector embeddings for knowledge chunks."},
+    )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    chunk_id = Column(String(255), ForeignKey("knowledge_chunks.chunk_id"), nullable=False, index=True)
-    embedding = Column(Vector(EMBEDDING_DIM), nullable=False)
-    model = Column(String(100), nullable=False, default="gemini-embedding-001")
-
-    chunk = relationship("KnowledgeChunk", back_populates="embedding", foreign_keys=[chunk_id],
-                         primaryjoin="KnowledgeChunk.chunk_id == KnowledgeEmbedding.chunk_id")
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, server_default=text("gen_random_uuid()"))
+    chunk_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("knowledge_chunks.id", ondelete="CASCADE"))
+    embedding: Mapped[Optional[Any]] = mapped_column(Vector(1536))
+    model: Mapped[str] = mapped_column()
+    dimension: Mapped[Optional[int]] = mapped_column()

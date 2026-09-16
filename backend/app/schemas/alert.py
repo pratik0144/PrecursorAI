@@ -19,6 +19,10 @@ class AlertResponse(BaseModel):
     title: str
     message: str
     is_read: bool
+    status: str
+    source: str
+    assignee_id: Optional[uuid.UUID]
+    sla_deadline: Optional[datetime]
     created_at: datetime
 
     model_config = {"from_attributes": True}
