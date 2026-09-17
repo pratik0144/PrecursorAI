@@ -3,10 +3,12 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { 
   Globe as GlobeIcon, MapPin, Layers, Navigation, ZoomIn, ZoomOut, 
-  RefreshCw, ShieldAlert, AlertTriangle, Eye, ArrowRight 
+  RefreshCw, ShieldAlert, AlertTriangle, Eye, ArrowRight, Database 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useIncidentStore } from '../stores/incident-store';
+import { useDatasetStore, DATASETS } from '../stores/dataset-store';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
@@ -24,7 +26,7 @@ interface FieldLocation {
   keyAsset: string;
 }
 
-const FIELD_LOCATIONS: FieldLocation[] = [
+const BASE_LOCATIONS = [
   {
     id: 'LOC-ASM',
     name: 'Assam / Duliajan Basin',
@@ -32,11 +34,9 @@ const FIELD_LOCATIONS: FieldLocation[] = [
     lng: 95.32,
     lat: 27.35,
     zoom: 9.5,
-    severity: 'CRITICAL',
-    reports: 68,
-    sifPotential: 14,
-    primaryHazard: 'BOP barrier degradation & high pressure gas leak',
-    keyAsset: 'Wellhead WH-44 & Workover Rig #12'
+    searchKeys: ['assam', 'duliajan', 'wh-44', 'rig #12', 'naharkatia'],
+    keyAsset: 'Wellhead WH-44 & Rig #12',
+    defaultHazard: 'BOP barrier degradation & high pressure gas leak'
   },
   {
     id: 'LOC-RAJ',
@@ -45,11 +45,9 @@ const FIELD_LOCATIONS: FieldLocation[] = [
     lng: 71.38,
     lat: 25.75,
     zoom: 9.5,
-    severity: 'HIGH',
-    reports: 42,
-    sifPotential: 8,
-    primaryHazard: 'Line of fire around kelly bushing & iron roughneck',
-    keyAsset: 'Drilling Rig DR-03'
+    searchKeys: ['rajasthan', 'barmer', 'dr-03', 'esp'],
+    keyAsset: 'Drilling Rig DR-03',
+    defaultHazard: 'Line of fire around kelly bushing & VSD electrical'
   },
   {
     id: 'LOC-GUJ',
@@ -58,24 +56,20 @@ const FIELD_LOCATIONS: FieldLocation[] = [
     lng: 72.40,
     lat: 23.60,
     zoom: 9.5,
-    severity: 'REVIEW',
-    reports: 31,
-    sifPotential: 5,
-    primaryHazard: 'Flange weeping & LOTO permit compliance delays',
-    keyAsset: 'GGS Plant 01'
+    searchKeys: ['gujarat', 'mehsana', 'ggs', 'separator'],
+    keyAsset: 'GGS Plant 01 & Separator 04',
+    defaultHazard: 'Flange weeping & flowline third-party activity'
   },
   {
     id: 'LOC-KG',
-    name: 'KG-Basin Offshore Block',
+    name: 'KG Offshore Deepwater Block',
     region: 'Eastern Deepwater Offshore',
     lng: 82.30,
     lat: 16.50,
     zoom: 8.5,
-    severity: 'ROUTINE',
-    reports: 18,
-    sifPotential: 3,
-    primaryHazard: 'Mechanical crane rigging inspection interval',
-    keyAsset: 'Offshore Platform Alpha'
+    searchKeys: ['kg', 'offshore', 'platform alpha', 'manifold', 'crane'],
+    keyAsset: 'Platform Alpha & Subsea Block',
+    defaultHazard: 'Subsea riser breakthrough & crane lifting hazards'
   }
 ];
 
@@ -84,11 +78,48 @@ export default function Globe() {
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
 
-  const [selectedLoc, setSelectedLoc] = useState<FieldLocation>(FIELD_LOCATIONS[0]);
+  const incidents = useIncidentStore((s) => s.incidents);
+  const activeDatasetId = useDatasetStore((s) => s.activeDatasetId);
+  const activeMeta = DATASETS.find((d) => d.id === activeDatasetId);
+
+  // Compute dynamic field locations based on current incidents
+  const fieldLocations: FieldLocation[] = BASE_LOCATIONS.map((base) => {
+    const locIncidents = incidents.filter(i => {
+      const text = `${i.locationName} ${i.asset} ${i.reportText}`.toLowerCase();
+      return base.searchKeys.some(k => text.includes(k));
+    });
+
+    const hasCrit = locIncidents.some(i => i.severity === 'CRITICAL');
+    const hasHigh = locIncidents.some(i => i.severity === 'HIGH');
+    const hasRev = locIncidents.some(i => i.severity === 'REVIEW');
+    const severity: 'CRITICAL' | 'HIGH' | 'REVIEW' | 'ROUTINE' = 
+      hasCrit ? 'CRITICAL' : hasHigh ? 'HIGH' : hasRev ? 'REVIEW' : 'ROUTINE';
+
+    const sifCount = locIncidents.filter(i => (i.severity === 'CRITICAL' || i.severity === 'HIGH') && i.barrierStatus !== 'INTACT').length;
+    const topHazard = locIncidents[0]?.reportText ? locIncidents[0].reportText.slice(0, 75) + '...' : base.defaultHazard;
+    const topAsset = locIncidents[0]?.asset || base.keyAsset;
+
+    return {
+      id: base.id,
+      name: base.name,
+      region: base.region,
+      lng: base.lng,
+      lat: base.lat,
+      zoom: base.zoom,
+      severity,
+      reports: locIncidents.length > 0 ? locIncidents.length : (activeDatasetId === 'demo' ? 24 : 0),
+      sifPotential: sifCount > 0 ? sifCount : (activeDatasetId === 'demo' ? 6 : 0),
+      primaryHazard: topHazard,
+      keyAsset: topAsset,
+    };
+  });
+
+  const [selectedLocId, setSelectedLocId] = useState<string>(BASE_LOCATIONS[0].id);
+  const selectedLoc = fieldLocations.find(l => l.id === selectedLocId) || fieldLocations[0];
   const [mapStyle, setMapStyle] = useState<'light-v11' | 'satellite-streets-v12' | 'streets-v12'>('light-v11');
   const [isMapLoaded, setIsMapLoaded] = useState(false);
 
-  // Initialize Mapbox map
+  // Initialize Mapbox 3D Globe
   useEffect(() => {
     if (!mapContainer.current) return;
 
@@ -97,9 +128,9 @@ export default function Globe() {
     const instance = new mapboxgl.Map({
       container: mapContainer.current,
       style: `mapbox://styles/mapbox/${mapStyle}`,
-      center: [78.9629, 22.5937], // Center of India
+      center: [78.9629, 22.5937],
       zoom: 4.2,
-      projection: 'globe' as any, // 3D interactive globe view
+      projection: 'globe' as any,
     });
 
     instance.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
@@ -107,10 +138,9 @@ export default function Globe() {
     instance.on('load', () => {
       setIsMapLoaded(true);
 
-      // Add atmospheric glow to globe
       try {
         instance.setFog({
-          color: 'rgb(248, 250, 252)', // light background atmospheric tone
+          color: 'rgb(248, 250, 252)',
           'high-color': 'rgb(209, 229, 240)',
           'horizon-blend': 0.1,
           'space-color': 'rgb(241, 245, 249)',
@@ -142,12 +172,10 @@ export default function Globe() {
     const currentMap = map.current;
     if (!currentMap || !isMapLoaded) return;
 
-    // Clear old markers
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
 
-    FIELD_LOCATIONS.forEach(loc => {
-      // Create custom DOM element for marker
+    fieldLocations.forEach(loc => {
       const el = document.createElement('div');
       el.className = 'cursor-pointer group flex flex-col items-center';
 
@@ -169,7 +197,6 @@ export default function Globe() {
         </div>
       `;
 
-      // Interactive popup
       const popup = new mapboxgl.Popup({ offset: 25, closeButton: false }).setHTML(`
         <div style="padding: 6px; font-family: sans-serif;">
           <div style="font-weight: bold; font-size: 12px; color: #0F172A;">${loc.name}</div>
@@ -181,7 +208,7 @@ export default function Globe() {
       `);
 
       el.addEventListener('click', () => {
-        setSelectedLoc(loc);
+        setSelectedLocId(loc.id);
         currentMap.flyTo({
           center: [loc.lng, loc.lat],
           zoom: loc.zoom,
@@ -197,11 +224,10 @@ export default function Globe() {
 
       markersRef.current.push(marker);
     });
-  }, [isMapLoaded]);
+  }, [isMapLoaded, incidents, mapStyle]);
 
-  // Fly to location helper
   const handleFlyTo = (loc: FieldLocation) => {
-    setSelectedLoc(loc);
+    setSelectedLocId(loc.id);
     map.current?.flyTo({
       center: [loc.lng, loc.lat],
       zoom: loc.zoom,
@@ -230,16 +256,23 @@ export default function Globe() {
             <GlobeIcon className="w-5 h-5 text-primary" /> Geospatial Precursor Intelligence (Mapbox)
           </h1>
           <p className="text-xs text-foreground-muted mt-0.5">
-            Powered by Mapbox 3D Globe View · Visualizing operational high-energy hazards and barrier degradations across India.
+            Powered by Mapbox 3D Globe View · Visualizing operational high-energy hazards across India.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <span className="px-2.5 py-1 bg-teal-50 text-teal-800 border border-teal-200 rounded text-xs font-mono font-semibold">
             MAPBOX GL CONNECTED
           </span>
-          <span className="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded text-xs font-mono font-semibold">
-            DEMO GEODATA
-          </span>
+          {activeDatasetId === 'demo' ? (
+            <span className="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded text-xs font-mono font-semibold">
+              DEMO GEODATA
+            </span>
+          ) : (
+            <span className="px-2.5 py-1 bg-violet-50 text-violet-800 border border-violet-200 rounded text-xs font-mono font-semibold flex items-center gap-1.5">
+              <Database className="w-3 h-3 text-violet-600" />
+              {activeMeta?.label.toUpperCase()} ({activeMeta?.tag})
+            </span>
+          )}
         </div>
       </div>
 
@@ -251,32 +284,31 @@ export default function Globe() {
           <div className="absolute top-6 left-6 z-10 flex flex-wrap items-center gap-2 bg-white/95 backdrop-blur-xs p-1.5 rounded-lg border border-border shadow-md">
             <button
               onClick={() => setMapStyle('light-v11')}
-              className={cn("px-2.5 py-1 rounded text-xs font-mono font-medium transition-all", mapStyle === 'light-v11' ? "bg-primary text-primary-foreground font-semibold" : "text-foreground-muted hover:bg-surface-2")}
+              className={cn("px-2.5 py-1 rounded text-xs font-mono font-medium transition-all cursor-pointer", mapStyle === 'light-v11' ? "bg-primary text-primary-foreground font-semibold" : "text-foreground-muted hover:bg-surface-2")}
             >
               Light Command
             </button>
             <button
               onClick={() => setMapStyle('satellite-streets-v12')}
-              className={cn("px-2.5 py-1 rounded text-xs font-mono font-medium transition-all", mapStyle === 'satellite-streets-v12' ? "bg-primary text-primary-foreground font-semibold" : "text-foreground-muted hover:bg-surface-2")}
+              className={cn("px-2.5 py-1 rounded text-xs font-mono font-medium transition-all cursor-pointer", mapStyle === 'satellite-streets-v12' ? "bg-primary text-primary-foreground font-semibold" : "text-foreground-muted hover:bg-surface-2")}
             >
               Satellite Terrain
             </button>
             <button
               onClick={() => setMapStyle('streets-v12')}
-              className={cn("px-2.5 py-1 rounded text-xs font-mono font-medium transition-all", mapStyle === 'streets-v12' ? "bg-primary text-primary-foreground font-semibold" : "text-foreground-muted hover:bg-surface-2")}
+              className={cn("px-2.5 py-1 rounded text-xs font-mono font-medium transition-all cursor-pointer", mapStyle === 'streets-v12' ? "bg-primary text-primary-foreground font-semibold" : "text-foreground-muted hover:bg-surface-2")}
             >
               Streets
             </button>
             <div className="h-4 w-px bg-border mx-1" />
             <button
               onClick={handleResetGlobe}
-              className="px-2 py-1 rounded text-xs font-mono text-foreground-dim hover:text-foreground hover:bg-surface-2 flex items-center gap-1"
+              className="px-2 py-1 rounded text-xs font-mono text-foreground-dim hover:text-foreground hover:bg-surface-2 flex items-center gap-1 cursor-pointer"
             >
               <RefreshCw className="w-3 h-3" /> Reset View
             </button>
           </div>
 
-          {/* Actual Mapbox Container */}
           <div ref={mapContainer} className="w-full h-full rounded-md overflow-hidden" />
         </div>
 
@@ -292,7 +324,7 @@ export default function Globe() {
           </div>
 
           <div className="space-y-2.5 flex-1 overflow-y-auto">
-            {FIELD_LOCATIONS.map(loc => {
+            {fieldLocations.map(loc => {
               const isSelected = selectedLoc.id === loc.id;
               const isCrit = loc.severity === 'CRITICAL';
               return (

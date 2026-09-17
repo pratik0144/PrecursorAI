@@ -1,21 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HardHat, LayoutDashboard, ShieldCheck, ArrowRight, MapPin, Sparkles, Satellite } from 'lucide-react';
+import { HardHat, LayoutDashboard, ShieldCheck, ArrowRight, MapPin, Sparkles, Satellite, Database, Loader2 } from 'lucide-react';
+import { useDatasetStore, DATASETS, DatasetId } from '../stores/dataset-store';
+import { cn } from '@/lib/utils';
 
 export default function PortalSelect() {
   const navigate = useNavigate();
+  const activeDatasetId = useDatasetStore((s) => s.activeDatasetId);
+  const setActiveDataset = useDatasetStore((s) => s.setActiveDataset);
+  const [selectedDataset, setSelectedDataset] = useState<DatasetId>(activeDatasetId || 'demo');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleOpenCommandCenter = () => {
+    setIsLoading(true);
+    setActiveDataset(selectedDataset);
+    setIsLoading(false);
+    navigate('/command-center');
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col justify-between p-4 sm:p-8">
       {/* Header Branding */}
       <div className="flex items-center justify-between max-w-5xl mx-auto w-full pb-6 border-b border-border">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg shadow-sm">
-            P
-          </div>
-          <div>
-            <h1 className="font-bold text-xl font-mono tracking-tight text-foreground">PrecursorAI</h1>
-            <p className="text-xs text-foreground-muted">Operational Safety & SIF Intelligence System</p>
+        <div className="flex items-center gap-3.5">
+          <img 
+            src="/logo.png" 
+            alt="PrecursorAI Logo" 
+            className="w-11 h-11 object-contain shrink-0" 
+          />
+          <div className="flex flex-col">
+            <img 
+              src="/logo-name.png" 
+              alt="PrecursorAI" 
+              className="h-7 w-auto object-contain object-left" 
+            />
+            <p className="text-xs text-foreground-muted mt-0.5">Operational Safety & SIF Intelligence System</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -78,25 +97,22 @@ export default function PortalSelect() {
             </div>
 
             <button
-              onClick={() => navigate('/worker')}
-              className="w-full py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg text-xs font-mono transition-colors flex items-center justify-center gap-2 shadow-xs"
+              onClick={(e) => { e.stopPropagation(); navigate('/worker'); }}
+              className="w-full py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg text-xs font-mono transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer"
             >
               Submit Field Report <ArrowRight className="w-4 h-4" />
             </button>
           </div>
 
           {/* Card 2: Higher Official / Management */}
-          <div 
-            onClick={() => navigate('/command-center')}
-            className="p-6 bg-surface-1 border-2 border-border hover:border-primary rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between space-y-6"
-          >
+          <div className="p-6 bg-surface-1 border-2 border-border rounded-xl shadow-sm flex flex-col justify-between space-y-5">
             <div className="space-y-4">
-              <div className="w-14 h-14 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-primary group-hover:scale-105 transition-transform shadow-2xs">
+              <div className="w-14 h-14 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-primary shadow-2xs">
                 <LayoutDashboard className="w-7 h-7" />
               </div>
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold font-mono text-foreground group-hover:text-primary transition-colors">
+                  <h3 className="text-lg font-bold font-mono text-foreground">
                     HSSE Officer & Management
                   </h3>
                   <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px] font-mono font-bold">
@@ -104,37 +120,85 @@ export default function PortalSelect() {
                   </span>
                 </div>
                 <p className="text-xs text-foreground-muted leading-relaxed font-sans">
-                  Access the complete Command Center, live Mapbox satellite hazard heatmap, triage review queue, and SIF analytics.
+                  Access the Command Center with live satellite hazard map, triage queue, and SIF analytics.
                 </p>
               </div>
 
               <div className="space-y-2 pt-2 border-t border-border/60 text-xs font-mono text-foreground-dim">
                 <div className="flex items-center gap-2">
-                  <Satellite className="w-3.5 h-3.5 text-primary" /> Live 3D Satellite Map & Heatmap
-                </div>
-                <div className="flex items-center gap-2">
                   <ShieldCheck className="w-3.5 h-3.5 text-primary" /> 3-Factor SIF Risk Engine
                 </div>
                 <div className="flex items-center gap-2">
-                  <ArrowRight className="w-3.5 h-3.5 text-primary" /> Incident Triage & Alerts
+                  <Satellite className="w-3.5 h-3.5 text-primary" /> Live Satellite Map & Heatmap
+                </div>
+                <div className="flex items-center gap-2">
+                  <Database className="w-3.5 h-3.5 text-primary" /> Select data source below
+                </div>
+              </div>
+
+              {/* Dataset Selector */}
+              <div className="pt-3 border-t border-border/60 space-y-2">
+                <div className="text-[10px] font-mono font-bold text-foreground-muted uppercase tracking-wider">
+                  Choose Data Source
+                </div>
+                <div className="space-y-1.5">
+                  {DATASETS.map((ds) => (
+                    <button
+                      key={ds.id}
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setSelectedDataset(ds.id); }}
+                      className={cn(
+                        "w-full p-2.5 rounded-lg border text-left transition-all flex items-center gap-3 cursor-pointer",
+                        selectedDataset === ds.id
+                          ? "border-primary bg-primary/5 shadow-sm"
+                          : "border-border bg-surface-2 hover:bg-surface-3"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0",
+                        selectedDataset === ds.id ? "border-primary" : "border-foreground-dim/40"
+                      )}>
+                        {selectedDataset === ds.id && (
+                          <div className="w-2 h-2 rounded-full bg-primary" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono font-bold text-foreground">{ds.label}</span>
+                          <span className={cn(
+                            "px-1.5 py-0.5 rounded text-[9px] font-mono font-bold border",
+                            ds.id === 'demo' ? "bg-surface-2 text-foreground-dim border-border" :
+                            ds.id === 'setA' ? "bg-violet-50 text-violet-700 border-violet-200" :
+                            "bg-amber-50 text-amber-700 border-amber-200"
+                          )}>{ds.tag}</span>
+                        </div>
+                        <p className="text-[10px] text-foreground-muted truncate">{ds.description}</p>
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
 
             <button
-              onClick={() => navigate('/command-center')}
-              className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg text-xs font-mono transition-colors flex items-center justify-center gap-2 shadow-xs"
+              onClick={handleOpenCommandCenter}
+              disabled={isLoading}
+              className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg text-xs font-mono transition-colors flex items-center justify-center gap-2 shadow-xs disabled:opacity-60 cursor-pointer"
             >
-              Open Command Center <ArrowRight className="w-4 h-4" />
+              {isLoading ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Loading Dataset...</>
+              ) : (
+                <>Open Command Center <ArrowRight className="w-4 h-4" /></>
+              )}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Footer */}
+      {/* Footer Info */}
       <div className="max-w-5xl mx-auto w-full pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-2 text-xs font-mono text-foreground-dim">
-        <span>PrecursorAI Platform · Oil & Natural Gas Operational Safety</span>
-        <span>No Credentials Required · Direct Role Access</span>
+        <div>Deterministic Ruleset Engine · v1.2.0-prod</div>
+        <div>Compliant with IOGP 9 Life-Saving Rules & OISD Standards</div>
       </div>
     </div>
   );

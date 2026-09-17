@@ -5,6 +5,7 @@ import { Satellite, MapPin, ArrowRight, ShieldAlert, Radio } from 'lucide-react'
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useIncidentStore, IncidentMarker } from '../../stores/incident-store';
+import { useDatasetStore } from '../../stores/dataset-store';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
@@ -85,9 +86,16 @@ export const HomeScreenMap: React.FC = () => {
 
   const incidents = useIncidentStore((s) => s.incidents);
   const activeIncident = useIncidentStore((s) => s.activeIncident);
+  const activeDatasetId = useDatasetStore((s) => s.activeDatasetId);
+  const isSampleData = activeDatasetId === 'setA' || activeDatasetId === 'setB';
 
   const [selectedId, setSelectedId] = useState<string>('ASSAM');
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
+
+  // Auto-switch to national view when sample data is loaded
+  useEffect(() => {
+    if (isSampleData) setSelectedId('ALL');
+  }, [isSampleData]);
 
   const activeLoc = FIELD_LOCATIONS.find(l => l.id === selectedId) || FIELD_LOCATIONS[1];
 
@@ -125,11 +133,21 @@ export const HomeScreenMap: React.FC = () => {
 
     instance.on('load', () => {
       setIsLoaded(true);
+      instance.resize();
     });
+
+    // Handle container resize
+    const resizeObserver = new ResizeObserver(() => {
+      instance.resize();
+    });
+    if (mapContainer.current) {
+      resizeObserver.observe(mapContainer.current);
+    }
 
     map.current = instance;
 
     return () => {
+      resizeObserver.disconnect();
       markersRef.current.forEach(m => m.remove());
       markersRef.current = [];
       instance.remove();
@@ -205,7 +223,86 @@ export const HomeScreenMap: React.FC = () => {
 
       markersRef.current.push(marker);
     });
-  }, [selectedId, incidents, isLoaded]);
+
+    // ── Heatmap severity circles (Sample A / B only) ──
+    // Clean up old layers first
+    ['heatmap-dots', 'heatmap-mid', 'heatmap-glow'].forEach(id => {
+      if (currentMap.getLayer(id)) currentMap.removeLayer(id);
+    });
+    if (currentMap.getSource('heatmap-src')) currentMap.removeSource('heatmap-src');
+
+    if (isSampleData && displayList.length > 0) {
+      const features = displayList.map((inc) => ({
+        type: 'Feature' as const,
+        geometry: { type: 'Point' as const, coordinates: [inc.lng, inc.lat] },
+        properties: {
+          severity: inc.severity,
+          color: inc.severity === 'CRITICAL' ? '#EF4444' :
+                 inc.severity === 'HIGH' ? '#FACC15' : '#22C55E',
+        }
+      }));
+
+      currentMap.addSource('heatmap-src', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features }
+      });
+
+      // Layer 1: Large outer glow (very visible)
+      currentMap.addLayer({
+        id: 'heatmap-glow',
+        type: 'circle',
+        source: 'heatmap-src',
+        paint: {
+          'circle-radius': [
+            'interpolate', ['linear'], ['zoom'],
+            3, ['case', ['==', ['get', 'severity'], 'CRITICAL'], 18, ['==', ['get', 'severity'], 'HIGH'], 14, 10],
+            8, ['case', ['==', ['get', 'severity'], 'CRITICAL'], 45, ['==', ['get', 'severity'], 'HIGH'], 35, 25],
+            13, ['case', ['==', ['get', 'severity'], 'CRITICAL'], 80, ['==', ['get', 'severity'], 'HIGH'], 60, 40],
+          ],
+          'circle-color': ['get', 'color'],
+          'circle-opacity': 0.3,
+          'circle-blur': 0.8,
+        }
+      });
+
+      // Layer 2: Mid ring
+      currentMap.addLayer({
+        id: 'heatmap-mid',
+        type: 'circle',
+        source: 'heatmap-src',
+        paint: {
+          'circle-radius': [
+            'interpolate', ['linear'], ['zoom'],
+            3, 6,
+            8, 14,
+            13, 24,
+          ],
+          'circle-color': ['get', 'color'],
+          'circle-opacity': 0.5,
+          'circle-blur': 0.3,
+        }
+      });
+
+      // Layer 3: Inner bright dot with white stroke
+      currentMap.addLayer({
+        id: 'heatmap-dots',
+        type: 'circle',
+        source: 'heatmap-src',
+        paint: {
+          'circle-radius': [
+            'interpolate', ['linear'], ['zoom'],
+            3, 4,
+            8, 7,
+            13, 10,
+          ],
+          'circle-color': ['get', 'color'],
+          'circle-opacity': 1,
+          'circle-stroke-width': 2.5,
+          'circle-stroke-color': '#ffffff',
+        }
+      });
+    }
+  }, [selectedId, incidents, isLoaded, isSampleData]);
 
   // If a new worker report was just added, auto-focus that region
   useEffect(() => {
@@ -256,8 +353,8 @@ export const HomeScreenMap: React.FC = () => {
         </div>
       </div>
 
-      {/* Map Surface (Compact Height) */}
-      <div className="relative h-48 sm:h-52 w-full overflow-hidden">
+      {/* Map Surface (Expanded View) */}
+      <div className="relative h-72 sm:h-80 md:h-[340px] w-full overflow-hidden">
         {/* Mapbox container */}
         <div ref={mapContainer} className="w-full h-full" />
 

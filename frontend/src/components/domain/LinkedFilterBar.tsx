@@ -5,12 +5,16 @@ import { Filter, Search } from 'lucide-react';
 interface LinkedFilterBarProps {
   activeFilter?: string;
   onFilterChange?: (filter: string) => void;
+  searchTerm?: string;
+  onSearchChange?: (term: string) => void;
   className?: string;
 }
 
 export const LinkedFilterBar: React.FC<LinkedFilterBarProps> = ({ 
   activeFilter = 'ALL', 
   onFilterChange, 
+  searchTerm = '',
+  onSearchChange,
   className 
 }) => {
   const filters = [
@@ -32,7 +36,7 @@ export const LinkedFilterBar: React.FC<LinkedFilterBarProps> = ({
               key={f.id}
               onClick={() => onFilterChange?.(f.id)}
               className={cn(
-                "px-3 py-1.5 rounded-md text-xs font-semibold font-mono transition-all shrink-0 border",
+                "px-3 py-1.5 rounded-md text-xs font-semibold font-mono transition-all shrink-0 border cursor-pointer",
                 isActive 
                   ? (f.color || "bg-primary text-primary-foreground border-primary")
                   : "bg-surface-2 text-foreground-muted border-border hover:bg-surface-3 hover:text-foreground"
@@ -48,6 +52,8 @@ export const LinkedFilterBar: React.FC<LinkedFilterBarProps> = ({
         <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-foreground-dim" />
         <input 
           type="text" 
+          value={searchTerm}
+          onChange={(e) => onSearchChange?.(e.target.value)}
           placeholder="Filter by keyword, asset, rule..."
           className="h-8 w-60 rounded-md border border-border bg-background pl-8 pr-3 text-xs outline-none focus:border-primary text-foreground"
         />

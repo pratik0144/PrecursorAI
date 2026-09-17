@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import setAData from '../data/demo_set_a.json';
+import setBData from '../data/demo_set_b.json';
 
 export interface IncidentMarker {
   id: string;
@@ -24,22 +26,19 @@ interface IncidentState {
   setActiveIncident: (incident: IncidentMarker | null) => void;
   resolveIncident: (id: string) => void;
   reopenIncident: (id: string) => void;
+  loadIncidents: (items: IncidentMarker[]) => void;
 }
 
-const INITIAL_INCIDENTS: IncidentMarker[] = [
+const DEMO_INCIDENTS: IncidentMarker[] = [
   {
     id: 'REP-4091',
     reportText: 'Workover rig #12: Annular preventer pressure loss during casing test with drill string suspended',
     reportType: 'NEAR_MISS',
     locationName: 'Assam / Duliajan / Well #44',
     asset: 'Wellhead WH-44 & Rig #12',
-    lat: 27.35,
-    lng: 95.32,
-    severity: 'CRITICAL',
-    energySource: 'PRESSURE',
-    barrierStatus: 'FAILED',
-    timestamp: '12m ago',
-    status: 'OPEN',
+    lat: 27.35, lng: 95.32,
+    severity: 'CRITICAL', energySource: 'PRESSURE', barrierStatus: 'FAILED',
+    timestamp: '12m ago', status: 'OPEN',
   },
   {
     id: 'REP-4089',
@@ -47,13 +46,9 @@ const INITIAL_INCIDENTS: IncidentMarker[] = [
     reportType: 'SAFETY_OBSERVATION',
     locationName: 'Assam / Naharkatia Block',
     asset: 'Wellhead WH-44',
-    lat: 27.30,
-    lng: 95.28,
-    severity: 'HIGH',
-    energySource: 'GRAVITY',
-    barrierStatus: 'MISSING',
-    timestamp: '45m ago',
-    status: 'OPEN',
+    lat: 27.30, lng: 95.28,
+    severity: 'HIGH', energySource: 'GRAVITY', barrierStatus: 'MISSING',
+    timestamp: '45m ago', status: 'OPEN',
   },
   {
     id: 'REP-4082',
@@ -61,13 +56,9 @@ const INITIAL_INCIDENTS: IncidentMarker[] = [
     reportType: 'UNSAFE_ACT',
     locationName: 'Rajasthan / Barmer Basin',
     asset: 'Drilling Rig DR-03',
-    lat: 25.75,
-    lng: 71.38,
-    severity: 'HIGH',
-    energySource: 'MOTION',
-    barrierStatus: 'BYPASSED',
-    timestamp: '2h ago',
-    status: 'OPEN',
+    lat: 25.75, lng: 71.38,
+    severity: 'HIGH', energySource: 'MOTION', barrierStatus: 'BYPASSED',
+    timestamp: '2h ago', status: 'OPEN',
   },
   {
     id: 'REP-4076',
@@ -75,13 +66,9 @@ const INITIAL_INCIDENTS: IncidentMarker[] = [
     reportType: 'UNSAFE_CONDITION',
     locationName: 'Gujarat / Mehsana Assets',
     asset: 'GGS Plant 01',
-    lat: 23.60,
-    lng: 72.40,
-    severity: 'REVIEW',
-    energySource: 'CHEMICAL',
-    barrierStatus: 'INTACT',
-    timestamp: '5h ago',
-    status: 'OPEN',
+    lat: 23.60, lng: 72.40,
+    severity: 'REVIEW', energySource: 'CHEMICAL', barrierStatus: 'INTACT',
+    timestamp: '5h ago', status: 'OPEN',
   },
   {
     id: 'REP-4065',
@@ -89,18 +76,25 @@ const INITIAL_INCIDENTS: IncidentMarker[] = [
     reportType: 'SAFETY_OBSERVATION',
     locationName: 'KG Offshore Deepwater Block',
     asset: 'Platform Alpha',
-    lat: 16.50,
-    lng: 82.30,
-    severity: 'ROUTINE',
-    energySource: 'MECHANICAL',
-    barrierStatus: 'DEGRADED',
-    timestamp: '1d ago',
-    status: 'OPEN',
+    lat: 16.50, lng: 82.30,
+    severity: 'ROUTINE', energySource: 'MECHANICAL', barrierStatus: 'DEGRADED',
+    timestamp: '1d ago', status: 'OPEN',
   }
 ];
 
+function getInitialIncidents(): IncidentMarker[] {
+  try {
+    const saved = localStorage.getItem('precursor_active_dataset');
+    if (saved === 'setA') return setAData.incidents as unknown as IncidentMarker[];
+    if (saved === 'setB') return setBData.incidents as unknown as IncidentMarker[];
+  } catch (e) {
+    // ignore
+  }
+  return DEMO_INCIDENTS;
+}
+
 export const useIncidentStore = create<IncidentState>((set) => ({
-  incidents: INITIAL_INCIDENTS,
+  incidents: getInitialIncidents(),
   activeIncident: null,
   addWorkerIncident: (newIncident) =>
     set((state) => ({
@@ -124,4 +118,8 @@ export const useIncidentStore = create<IncidentState>((set) => ({
           : inc
       ),
     })),
+  loadIncidents: (items) =>
+    set({ incidents: items, activeIncident: null }),
 }));
+
+export { DEMO_INCIDENTS };

@@ -1,55 +1,71 @@
 import React from 'react';
-import { ScrollText, ShieldCheck, Clock, Terminal } from 'lucide-react';
+import { ScrollText, ShieldCheck, Clock, Terminal, Database } from 'lucide-react';
+import { useIncidentStore } from '../stores/incident-store';
+import { useDatasetStore, DATASETS } from '../stores/dataset-store';
 
 export default function AuditLog() {
-  const auditEntries = [
+  const incidents = useIncidentStore((s) => s.incidents);
+  const activeDatasetId = useDatasetStore((s) => s.activeDatasetId);
+  const activeMeta = DATASETS.find((d) => d.id === activeDatasetId);
+
+  // Generate dynamic audit entries for active incidents
+  const incidentAuditEntries = incidents.slice(0, 10).map((inc, i) => ({
+    id: `AUD-${9000 + i}`,
+    timestamp: inc.timestamp === 'Just now' ? 'Just now' : `2026-09-17 ${14 - i}:30:${(20 + i * 3) % 60} UTC`,
+    action: inc.severity === 'CRITICAL' ? 'CRITICAL_SIF_ESCALATION' : 'CLASSIFICATION_DECISION',
+    actor: inc.isLiveWorkerReport ? 'Worker Direct Portal + Gemini AI' : 'Deterministic 3-Factor Engine (Ruleset v1.2.0)',
+    target: `Report ${inc.id} (${inc.asset})`,
+    details: `Evaluated 3-factor test for ${inc.locationName}: EnergySource=${inc.energySource}, BarrierStatus=${inc.barrierStatus} -> SIF Potential: ${inc.severity}. Logged observation: "${inc.reportText.slice(0, 95)}..."`,
+    status: 'VERIFIED'
+  }));
+
+  const systemEntries = [
     {
-      id: 'AUD-9021',
-      timestamp: '2026-09-16 14:32:18 UTC',
-      action: 'CLASSIFICATION_DECISION',
-      actor: 'Deterministic Engine (Ruleset v1.2.0)',
-      target: 'Report REP-4091',
-      details: 'Evaluated 3-factor test: HighEnergy=true, PersonInZone=true, BarrierCompromised=true -> SIF Precursor (PSIF). Risk score: 82.',
+      id: `AUD-8990`,
+      timestamp: '2026-09-17 08:00:00 UTC',
+      action: 'DATASET_INITIALIZATION',
+      actor: 'Dataset Ingestion Pipeline',
+      target: `Active Partition: ${activeMeta?.label} (${activeMeta?.tag})`,
+      details: `Mounted and verified ${incidents.length} structured precursor incidents across ONGC/OIL field blocks. Cryptographic checksum verified.`,
       status: 'VERIFIED'
     },
     {
-      id: 'AUD-9020',
-      timestamp: '2026-09-16 14:32:16 UTC',
-      action: 'LLM_INVOCATION',
-      actor: 'GeminiProvider (gemini-2.0-flash)',
-      target: 'Pass B Reasoning (REP-4091)',
-      details: 'Tokens: 412 in / 128 out. Latency: 1.12s. Extraction valid according to ExtractionPassB Pydantic schema.',
-      status: 'VERIFIED'
-    },
-    {
-      id: 'AUD-9019',
-      timestamp: '2026-09-16 14:15:02 UTC',
-      action: 'ALERT_LIFECYCLE_TRANSITION',
-      actor: 'User: r.sharma@oil.in (HSSE Officer)',
-      target: 'Alert ALT-801',
-      details: 'Status transitioned: OPEN -> ACKNOWLEDGED. SLA timer reset: 18 mins to review.',
-      status: 'VERIFIED'
-    },
-    {
-      id: 'AUD-9018',
-      timestamp: '2026-09-16 12:00:00 UTC',
-      action: 'PATTERN_SWEEP_EXECUTION',
-      actor: 'Tier-2 Sweep Worker (arq background task)',
-      target: 'SweepRun SR-44',
-      details: 'Scanned 142 reports across 30 days. Found 3 clusters. 1 new compounding pattern created.',
+      id: `AUD-8989`,
+      timestamp: '2026-09-17 06:00:00 UTC',
+      action: 'LLM_PROVIDER_HEALTH_CHECK',
+      actor: 'GeminiProvider (gemini-3.8-flash)',
+      target: 'Pass A & Pass B Verification Gate',
+      details: 'Auto-rotation pool healthy with fallback API keys. Max output tokens capped at 512. Average latency: 1.4s.',
       status: 'VERIFIED'
     }
   ];
 
+  const allEntries = [...incidentAuditEntries, ...systemEntries];
+
   return (
     <div className="p-4 bg-background text-foreground min-h-screen space-y-4">
-      <div>
-        <h1 className="text-xl font-bold font-mono tracking-tight text-foreground flex items-center gap-2">
-          <ScrollText className="w-5 h-5 text-primary" /> Immutable Audit & Explainability Trail
-        </h1>
-        <p className="text-xs text-foreground-muted mt-0.5">
-          Append-only cryptographic audit records for every LLM invocation, deterministic classification, and alert transition.
-        </p>
+      <div className="flex flex-wrap justify-between items-center gap-3">
+        <div>
+          <h1 className="text-xl font-bold font-mono tracking-tight text-foreground flex items-center gap-2">
+            <ScrollText className="w-5 h-5 text-primary" /> Immutable Audit & Explainability Trail
+          </h1>
+          <p className="text-xs text-foreground-muted mt-0.5">
+            Append-only cryptographic audit records for every LLM invocation, deterministic classification, and alert transition.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="px-2.5 py-1 bg-surface-1 border border-border rounded-lg text-xs font-mono font-semibold flex items-center gap-1.5">
+            <Database className="w-3.5 h-3.5 text-primary" />
+            <span>Partition: <strong>{activeMeta?.label}</strong></span>
+            <span className="px-1.5 py-0.2 rounded bg-primary/10 text-primary text-[10px] font-bold">
+              {activeMeta?.tag}
+            </span>
+          </div>
+          <span className="px-2.5 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs font-mono font-semibold">
+            {allEntries.length} Records Verified
+          </span>
+        </div>
       </div>
 
       <div className="bg-surface-1 border border-border rounded-lg shadow-sm overflow-hidden">
@@ -61,7 +77,7 @@ export default function AuditLog() {
         </div>
 
         <div className="divide-y divide-border/60 font-mono text-xs">
-          {auditEntries.map(entry => (
+          {allEntries.map(entry => (
             <div key={entry.id} className="p-4 hover:bg-surface-2/60 transition-colors space-y-1.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">

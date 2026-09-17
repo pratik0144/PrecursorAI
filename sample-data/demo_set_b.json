@@ -1,0 +1,368 @@
+{
+  "incidents": [
+    {
+      "id": "REP-2001",
+      "reportText": "During coil tubing ops on WH-44, noticed severe H2S release from the BOP annular preventer seal. Gas detectors triggered and area evacuated immediately. The secondary seal appears to be completely blown.",
+      "reportType": "NEAR_MISS",
+      "locationName": "Assam / Duliajan Basin",
+      "asset": "Wellhead WH-44",
+      "lat": 27.36,
+      "lng": 95.31,
+      "severity": "CRITICAL",
+      "energySource": "CHEMICAL",
+      "barrierStatus": "FAILED",
+      "timestamp": "3m ago",
+      "status": "OPEN"
+    },
+    {
+      "id": "REP-2002",
+      "reportText": "Heavy vibration observed in GGS-2 Plant main compressor during startup. The foundation bolts on the non-drive end are loose, causing significant swaying of the discharge piping.",
+      "reportType": "UNSAFE_CONDITION",
+      "locationName": "Assam / Duliajan Basin",
+      "asset": "GGS-2 Plant",
+      "lat": 27.34,
+      "lng": 95.33,
+      "severity": "HIGH",
+      "energySource": "MOTION",
+      "barrierStatus": "DEGRADED",
+      "timestamp": "20m ago",
+      "status": "OPEN"
+    },
+    {
+      "id": "REP-2003",
+      "reportText": "Flare System Knockout Drum liquid level transmitter is showing erratic readings, fluctuating between 40% and 80% rapidly. Operator has to manually drain the drum every 2 hours to prevent carryover.",
+      "reportType": "SAFETY_OBSERVATION",
+      "locationName": "Assam / Duliajan Basin",
+      "asset": "Flare System Knockout Drum",
+      "lat": 27.35,
+      "lng": 95.32,
+      "severity": "REVIEW",
+      "energySource": "ELECTRICAL",
+      "barrierStatus": "BYPASSED",
+      "timestamp": "1h ago",
+      "status": "OPEN"
+    },
+    {
+      "id": "REP-2004",
+      "reportText": "Housekeeping issue at Workover Rig #12. Empty chemical drums stacked near the mud tank without proper securing. Instructed roustabouts to move them to the designated storage area.",
+      "reportType": "UNSAFE_ACT",
+      "locationName": "Assam / Duliajan Basin",
+      "asset": "Workover Rig #12",
+      "lat": 27.36,
+      "lng": 95.30,
+      "severity": "ROUTINE",
+      "energySource": "GRAVITY",
+      "barrierStatus": "INTACT",
+      "timestamp": "4h ago",
+      "status": "OPEN"
+    },
+    {
+      "id": "REP-2005",
+      "reportText": "Main breaker for Subsurface ESP Pump tripped with a loud bang, followed by smoke from the VSD cabinet. Thermography showed temperatures exceeding 120C on phase B. Suspect insulation failure.",
+      "reportType": "NEAR_MISS",
+      "locationName": "Rajasthan / Barmer Basin",
+      "asset": "Subsurface ESP Pump",
+      "lat": 25.76,
+      "lng": 71.37,
+      "severity": "CRITICAL",
+      "energySource": "THERMAL",
+      "barrierStatus": "FAILED",
+      "timestamp": "1d ago",
+      "status": "OPEN"
+    },
+    {
+      "id": "REP-2006",
+      "reportText": "Kelly bushing on Drilling Rig DR-03 is badly worn out and slipping during high torque drilling. The rotary table is also making a grinding noise. Drilling halted for inspection.",
+      "reportType": "UNSAFE_CONDITION",
+      "locationName": "Rajasthan / Barmer Basin",
+      "asset": "Drilling Rig DR-03",
+      "lat": 25.74,
+      "lng": 71.39,
+      "severity": "HIGH",
+      "energySource": "MECHANICAL",
+      "barrierStatus": "DEGRADED",
+      "timestamp": "3m ago",
+      "status": "OPEN"
+    },
+    {
+      "id": "REP-2007",
+      "reportText": "Central Gathering Facility inlet manifold header has a minor seep from the 12-inch flange gasket. The leak is contained, but the gasket needs replacement during the next shutdown.",
+      "reportType": "SAFETY_OBSERVATION",
+      "locationName": "Rajasthan / Barmer Basin",
+      "asset": "Central Gathering Facility",
+      "lat": 25.75,
+      "lng": 71.38,
+      "severity": "REVIEW",
+      "energySource": "PRESSURE",
+      "barrierStatus": "DEGRADED",
+      "timestamp": "20m ago",
+      "status": "OPEN"
+    },
+    {
+      "id": "REP-2008",
+      "reportText": "Crew at Drilling Rig DR-03 conducting a toolbox talk before lifting casing joints. Good participation and safety awareness demonstrated by the derrickman.",
+      "reportType": "SAFETY_OBSERVATION",
+      "locationName": "Rajasthan / Barmer Basin",
+      "asset": "Drilling Rig DR-03",
+      "lat": 25.75,
+      "lng": 71.39,
+      "severity": "ROUTINE",
+      "energySource": "MOTION",
+      "barrierStatus": "INTACT",
+      "timestamp": "1h ago",
+      "status": "OPEN"
+    },
+    {
+      "id": "REP-2009",
+      "reportText": "Excavator struck the 8-inch Crude Export Flowline during trenching work nearby, causing a 2-inch gash. Pipeline was live at 30 kg/cm2. Fortunately, the pipe didn't rupture fully, but work was stopped instantly.",
+      "reportType": "NEAR_MISS",
+      "locationName": "Gujarat / Mehsana Basin",
+      "asset": "Crude Export Flowline",
+      "lat": 23.61,
+      "lng": 72.39,
+      "severity": "CRITICAL",
+      "energySource": "MECHANICAL",
+      "barrierStatus": "FAILED",
+      "timestamp": "4h ago",
+      "status": "OPEN"
+    },
+    {
+      "id": "REP-2010",
+      "reportText": "Separator Vessel 04 PSV (Pressure Safety Valve) isolation valve was found closed during routine rounds. This leaves the vessel without overpressure protection. Valve opened immediately and locked.",
+      "reportType": "UNSAFE_ACT",
+      "locationName": "Gujarat / Mehsana Basin",
+      "asset": "Separator Vessel 04",
+      "lat": 23.59,
+      "lng": 72.41,
+      "severity": "HIGH",
+      "energySource": "PRESSURE",
+      "barrierStatus": "BYPASSED",
+      "timestamp": "1d ago",
+      "status": "OPEN"
+    },
+    {
+      "id": "REP-2011",
+      "reportText": "GGS Plant 01 crude transfer pump seal is leaking approximately 10 drops per minute. Drip pan placed, but requires maintenance to replace the mechanical seal soon.",
+      "reportType": "SAFETY_OBSERVATION",
+      "locationName": "Gujarat / Mehsana Basin",
+      "asset": "GGS Plant 01",
+      "lat": 23.60,
+      "lng": 72.40,
+      "severity": "REVIEW",
+      "energySource": "CHEMICAL",
+      "barrierStatus": "DEGRADED",
+      "timestamp": "3m ago",
+      "status": "OPEN"
+    },
+    {
+      "id": "REP-2012",
+      "reportText": "Walkway grating near Separator Vessel 04 has a missing clip, causing it to wobble slightly when stepped on. Work order raised for structural team to fix.",
+      "reportType": "UNSAFE_CONDITION",
+      "locationName": "Gujarat / Mehsana Basin",
+      "asset": "Separator Vessel 04",
+      "lat": 23.60,
+      "lng": 72.41,
+      "severity": "ROUTINE",
+      "energySource": "GRAVITY",
+      "barrierStatus": "MISSING",
+      "timestamp": "20m ago",
+      "status": "OPEN"
+    },
+    {
+      "id": "REP-2013",
+      "reportText": "During subsea intervention on the Subsea Manifold Block, ROV reported a sudden gas breakthrough from the production riser base. Significant bubble plume visible on sonar. Emergency shutdown initiated.",
+      "reportType": "NEAR_MISS",
+      "locationName": "KG Offshore Deepwater Block",
+      "asset": "Subsea Manifold Block",
+      "lat": 16.51,
+      "lng": 82.29,
+      "severity": "CRITICAL",
+      "energySource": "PRESSURE",
+      "barrierStatus": "FAILED",
+      "timestamp": "1h ago",
+      "status": "OPEN"
+    },
+    {
+      "id": "REP-2014",
+      "reportText": "Deck Crane #02 load moment indicator (LMI) screen went blank during a heavy lift from the supply vessel. Operator had to rely on hand signals and guess the radius. Lift suspended.",
+      "reportType": "UNSAFE_CONDITION",
+      "locationName": "KG Offshore Deepwater Block",
+      "asset": "Deck Crane #02",
+      "lat": 16.49,
+      "lng": 82.31,
+      "severity": "HIGH",
+      "energySource": "GRAVITY",
+      "barrierStatus": "MISSING",
+      "timestamp": "4h ago",
+      "status": "OPEN"
+    },
+    {
+      "id": "REP-2015",
+      "reportText": "Offshore Platform Alpha firewater ring main pressure dropped below 6 kg/cm2 for 15 minutes due to a jockey pump trip. Standby pump kicked in, but the primary pump needs investigation.",
+      "reportType": "SAFETY_OBSERVATION",
+      "locationName": "KG Offshore Deepwater Block",
+      "asset": "Offshore Platform Alpha",
+      "lat": 16.50,
+      "lng": 82.30,
+      "severity": "REVIEW",
+      "energySource": "ELECTRICAL",
+      "barrierStatus": "DEGRADED",
+      "timestamp": "1d ago",
+      "status": "OPEN"
+    },
+    {
+      "id": "REP-2016",
+      "reportText": "Lifejackets in muster station B on Offshore Platform Alpha were found untidily stored after the weekly drill. Organized them properly as per the safety plan.",
+      "reportType": "UNSAFE_ACT",
+      "locationName": "KG Offshore Deepwater Block",
+      "asset": "Offshore Platform Alpha",
+      "lat": 16.50,
+      "lng": 82.32,
+      "severity": "ROUTINE",
+      "energySource": "MECHANICAL",
+      "barrierStatus": "INTACT",
+      "timestamp": "3m ago",
+      "status": "OPEN"
+    }
+  ],
+  "patterns": [
+    {
+      "id": "PAT-09",
+      "type": "COMPOUNDING",
+      "title": "Simultaneous failure of BOP secondary seals and H2S detector recalibration issues at Wellhead WH-44",
+      "severity": "CRITICAL",
+      "report_count": 8
+    },
+    {
+      "id": "PAT-10",
+      "type": "EMERGING",
+      "title": "Increasing frequency of VSD cabinet thermal faults on Subsurface ESP Pumps across Barmer",
+      "severity": "CRITICAL",
+      "report_count": 12
+    },
+    {
+      "id": "PAT-11",
+      "type": "RECURRING",
+      "title": "Repeated third-party excavator strikes near live Crude Export Flowlines in Mehsana",
+      "severity": "CRITICAL",
+      "report_count": 5
+    },
+    {
+      "id": "PAT-12",
+      "type": "COMPOUNDING",
+      "title": "Combined degradation of GGS-2 main compressor foundations and erratic instrumentation",
+      "severity": "HIGH",
+      "report_count": 6
+    },
+    {
+      "id": "PAT-13",
+      "type": "EMERGING",
+      "title": "Sudden rise in crane LMI failures during offshore supply vessel lifts",
+      "severity": "HIGH",
+      "report_count": 4
+    },
+    {
+      "id": "PAT-14",
+      "type": "RECURRING",
+      "title": "Frequent bypassing of PSV isolation valves on Separator Vessel 04 without MOC",
+      "severity": "HIGH",
+      "report_count": 9
+    },
+    {
+      "id": "PAT-15",
+      "type": "COMPOUNDING",
+      "title": "Jockey pump trips masking larger firewater ring main leaks at Offshore Platform Alpha",
+      "severity": "HIGH",
+      "report_count": 7
+    },
+    {
+      "id": "PAT-16",
+      "type": "EMERGING",
+      "title": "Premature wear of Kelly bushings and rotary tables on older Drilling Rigs",
+      "severity": "HIGH",
+      "report_count": 15
+    }
+  ],
+  "alerts": [
+    {
+      "id": "ALT-201",
+      "title": "BLOWOUT RISK: Subsea Manifold Block riser gas breakthrough detected on sonar.",
+      "severity": "CRITICAL"
+    },
+    {
+      "id": "ALT-202",
+      "title": "ELECTRICAL FLASH: VSD cabinet for Subsurface ESP Pump exceeding 120C.",
+      "severity": "CRITICAL"
+    },
+    {
+      "id": "ALT-203",
+      "title": "TOXIC GAS: Uncontrolled H2S release from Wellhead WH-44 BOP annular preventer.",
+      "severity": "CRITICAL"
+    },
+    {
+      "id": "ALT-204",
+      "title": "STRUCTURAL FAILURE: GGS-2 Plant main compressor foundation bolts loose causing heavy piping vibration.",
+      "severity": "HIGH"
+    },
+    {
+      "id": "ALT-205",
+      "title": "PIPELINE INTEGRITY: Crude Export Flowline damaged by third-party excavation activity.",
+      "severity": "HIGH"
+    },
+    {
+      "id": "ALT-206",
+      "title": "LIFTING HAZARD: Deck Crane #02 LMI failure during active lift operations.",
+      "severity": "HIGH"
+    }
+  ],
+  "workerNarratives": [
+    {
+      "narrative": "Was doing wireline op and smelled strong rotten egg odor near the tree. The lower master valve gland was leaking gas right in our faces. We had to run and grab SCBAs.",
+      "hazardCategory": "H2S / Toxic Exposure",
+      "field": "Assam / Duliajan Basin",
+      "asset": "Wellhead WH-44",
+      "dangerZone": true,
+      "barrierCompromised": true
+    },
+    {
+      "narrative": "The grating on the cellar deck gave way while I was walking. I almost fell through to the sea, caught myself on the handrail. The supports are completely rusted out.",
+      "hazardCategory": "Falling Object / Height",
+      "field": "KG Offshore Deepwater Block",
+      "asset": "Offshore Platform Alpha",
+      "dangerZone": true,
+      "barrierCompromised": true
+    },
+    {
+      "narrative": "Found the LOTO lock on the main export pump MCC broken and lying on the floor. Someone tried to energize it while mechanical team was still working on the coupling.",
+      "hazardCategory": "LOTO Bypass",
+      "field": "Rajasthan / Barmer Basin",
+      "asset": "Central Gathering Facility",
+      "dangerZone": true,
+      "barrierCompromised": false
+    },
+    {
+      "narrative": "The relief valve discharge line for the first stage separator is vibrating so much it broke its U-bolt support. Looks like it might crack the weld if not stopped.",
+      "hazardCategory": "Equipment Failure",
+      "field": "Gujarat / Mehsana Basin",
+      "asset": "GGS Plant 01",
+      "dangerZone": false,
+      "barrierCompromised": true
+    },
+    {
+      "narrative": "Noticed some oil soaked rags left near the diesel generator exhaust. Picked them up and put them in the hazardous waste bin.",
+      "hazardCategory": "Fire / Explosion Risk",
+      "field": "Assam / Duliajan Basin",
+      "asset": "Workover Rig #12",
+      "dangerZone": false,
+      "barrierCompromised": false
+    },
+    {
+      "narrative": "The driller’s cabin AC is dripping water right onto the electrical junction box on the floor. Put a bucket for now, need electrical team to seal the box.",
+      "hazardCategory": "Electrical Hazard",
+      "field": "Rajasthan / Barmer Basin",
+      "asset": "Drilling Rig DR-03",
+      "dangerZone": false,
+      "barrierCompromised": false
+    }
+  ]
+}

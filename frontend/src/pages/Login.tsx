@@ -15,11 +15,17 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center items-center p-4">
       <div className="w-full max-w-sm bg-surface-1 border border-border rounded-xl shadow-md p-6 space-y-6">
-        <div className="text-center space-y-2">
-          <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mx-auto mb-1">
-            <Shield className="w-6 h-6" />
-          </div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground font-mono">PrecursorAI</h1>
+        <div className="text-center space-y-3">
+          <img 
+            src="/logo.png" 
+            alt="PrecursorAI Logo" 
+            className="w-14 h-14 mx-auto object-contain drop-shadow-2xs" 
+          />
+          <img 
+            src="/logo-name.png" 
+            alt="PrecursorAI" 
+            className="h-7 mx-auto object-contain" 
+          />
           <p className="text-xs text-foreground-muted">Operational Safety Command Center</p>
         </div>
 

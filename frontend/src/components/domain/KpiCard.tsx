@@ -18,7 +18,6 @@ export const KpiCard: React.FC<KpiCardProps> = ({ label, value, trend, className
         {trend === 'down' && <span className="text-red-500">↓</span>}
         {trend === 'flat' && <span className="text-foreground-muted">→</span>}
       </div>
-      <span className="absolute top-2 right-2 text-[10px] text-foreground-muted bg-surface-2 px-1 rounded">DEMO</span>
     </div>
   );
 };

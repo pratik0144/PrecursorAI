@@ -1,8 +1,13 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Info } from 'lucide-react';
+import { Info, Database } from 'lucide-react';
+import { useDatasetStore } from '../../stores/dataset-store';
 
 export const DemoDataMarker = ({ className }: { className?: string }) => {
+  const activeDatasetId = useDatasetStore((s) => s.activeDatasetId);
+
+  if (activeDatasetId !== 'demo') return null; // Hide when using real sample data
+
   return (
     <div className={cn(
       "flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-md text-xs font-medium",
