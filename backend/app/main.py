@@ -43,13 +43,13 @@ app.add_middleware(RequestIDMiddleware)
 
 # Register routers
 API_PREFIX = "/api/v1"
-app.include_router(auth.router, prefix=API_PREFIX)
-app.include_router(reports.router, prefix=API_PREFIX)
-app.include_router(dashboard.router, prefix=API_PREFIX)
-app.include_router(alerts.router, prefix=API_PREFIX)
-app.include_router(patterns.router, prefix=API_PREFIX)
-app.include_router(geo.router, prefix=API_PREFIX)
-app.include_router(reference.router, prefix=API_PREFIX)
+app.include_router(auth.router, prefix=f"{API_PREFIX}/auth", tags=["auth"])
+app.include_router(reports.router, prefix=f"{API_PREFIX}/reports", tags=["reports"])
+app.include_router(dashboard.router, prefix=f"{API_PREFIX}/dashboard", tags=["dashboard"])
+app.include_router(alerts.router, prefix=f"{API_PREFIX}/alerts", tags=["alerts"])
+app.include_router(patterns.router, prefix=f"{API_PREFIX}/patterns", tags=["patterns"])
+app.include_router(geo.router, prefix=f"{API_PREFIX}/geo", tags=["geo"])
+app.include_router(reference.router, prefix=f"{API_PREFIX}/reference", tags=["reference"])
 
 @app.get("/health")
 async def health():

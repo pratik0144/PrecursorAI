@@ -17,10 +17,12 @@ class Settings(BaseSettings):
 
     # Gemini & LLM Provider
     LLM_PROVIDER: str = "gemini" # gemini/ollama
-    LLM_MODEL: str = "gemini-2.0-flash"
-    EMBEDDING_MODEL: str = "gemini-embedding-001"
+    LLM_MODEL: str = "gemini-3.8-flash"
+    EMBEDDING_MODEL: str = "models/gemini-embedding-001"
     EMBEDDING_DIMENSIONS: int = 1536
     GEMINI_API_KEY: str = ""
+    GEMINI_API_KEY_2: str = ""
+    GEMINI_API_KEY_3: str = ""
 
     # App
     APP_ENV: str = "development"

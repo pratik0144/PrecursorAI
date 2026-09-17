@@ -16,7 +16,7 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: { id: '1', name: 'Demo User', role: UserRole.ANALYST }, // Mocked initial
+  user: { id: '1', name: 'Demo User', role: UserRole.HSSE_OFFICER }, // Mocked initial
   token: 'mock-token',
   isAuthenticated: true,
   login: (user, token) => {

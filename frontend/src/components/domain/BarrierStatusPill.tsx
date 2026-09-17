@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-export const BarrierStatusPill = ({ status, label }: { status: string, label: string }) => {
+export const BarrierStatusPill = ({ status, label }: { status: string, label?: string }) => {
   const colors: Record<string, string> = {
     INTACT: "bg-emerald-50 text-emerald-700 border-emerald-300",
     DEGRADED: "bg-amber-50 text-amber-700 border-amber-300",
@@ -11,8 +11,8 @@ export const BarrierStatusPill = ({ status, label }: { status: string, label: st
     UNKNOWN: "bg-surface-2 text-foreground-dim border-border"
   };
   return (
-    <span className={cn("px-2 py-1 text-[10px] uppercase font-mono border rounded-full inline-flex items-center", colors[status] || colors.UNKNOWN)}>
-      {label} <span className="ml-1 opacity-70">({status})</span>
+    <span className={cn("px-2 py-0.5 text-[10px] uppercase font-mono font-semibold border rounded-full inline-flex items-center", colors[status] || colors.UNKNOWN)}>
+      {label ? <>{label} <span className="ml-1 opacity-70">({status})</span></> : status}
     </span>
   );
 }

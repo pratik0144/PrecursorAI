@@ -19,9 +19,25 @@ def evaluate_risk(pass_a, pass_b, ruleset_version=None) -> ClassificationResult:
     
     is_sif = high_energy_present and person_in_danger_zone and barrier_compromised
     
-    classification = "HSIF" if is_sif else "LSIF"
-    risk_score = 85.0 if is_sif else 30.0
-    escalation_level = "CRITICAL" if risk_score >= 80 else "NORMAL"
+    # Granular risk scoring based on factor count
+    factor_count = sum([high_energy_present, person_in_danger_zone, barrier_compromised])
+    
+    if is_sif:  # All 3 factors
+        classification = "HSIF"
+        risk_score = 92.0
+        escalation_level = "CRITICAL"
+    elif factor_count == 2:
+        classification = "PSIF"
+        risk_score = 72.0
+        escalation_level = "HIGH"
+    elif factor_count == 1:
+        classification = "LSIF"
+        risk_score = 45.0
+        escalation_level = "REVIEW"
+    else:
+        classification = "LOW_ENERGY"
+        risk_score = 15.0
+        escalation_level = "ROUTINE"
     
     requires_review = pass_b.confidence_score < 0.8 or pass_b.requires_followup
     

@@ -2,6 +2,7 @@ import axios from 'axios';
 
 export const apiClient = axios.create({
   baseURL: '/api/v1',
+  timeout: 10000, // 10s hard cap — never hang forever
   headers: {
     'Content-Type': 'application/json',
   },
