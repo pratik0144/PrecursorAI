@@ -21,6 +21,10 @@
 
 ---
 
+<p align="center">
+  <img src="docs/images/homescreen.png" alt="PrecursorAI Command Center" width="900" />
+</p>
+
 ## 📋 Table of Contents
 
 - [Problem Statement](#-problem-statement)
