@@ -261,9 +261,9 @@ Cosine similarity search over vector embeddings against IOGP/OISD safety knowled
 PrecursorAI/
 ├── README.md                               # This file
 ├── Indepth-overview.md                     # 778-line comprehensive system guide
-├── PROMPT_1_FRONTEND.md                    # Frontend specification document
-├── PROMPT_2_BACKEND.md                     # Backend hardening specification
-├── PROMPT_3_DATABASE.md                    # Database evolution specification
+├── FRONTEND.md                             # Frontend specification document
+├── BACKEND.md                              # Backend hardening specification
+├── DATABASE.md                             # Database evolution specification
 ├── docker-compose.yml                      # PostgreSQL + Redis + API + Worker
 ├── Makefile                                # Build automation commands
 ├── install_pgvector.ps1                    # Windows pgvector installer
